@@ -1,11 +1,16 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsString, IsOptional } from 'class-validator';
 
 export class CreateSubmissionDto {
-  @ApiProperty({ example: 'https://example.com/homework.jpg' })
-  @IsNotEmpty()
+  @ApiProperty({ example: 'https://example.com/homework.jpg', required: false })
+  @IsOptional()
   @IsString()
-  imageUrl: string;
+  imageUrl?: string;
+
+  @ApiProperty({ example: 'data:image/jpeg;base64,...', required: false })
+  @IsOptional()
+  @IsString()
+  imageBase64?: string;
 
   @ApiProperty({ example: 'uuid-v4' })
   @IsNotEmpty()
