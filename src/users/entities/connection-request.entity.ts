@@ -1,6 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, JoinColumn } from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { User } from './user.entity';
 import { ApiProperty } from '@nestjs/swagger';
+import { BaseEntity } from '../../common/entities/base.entity';
 
 export enum RequestStatus {
   PENDING = 'pending',
@@ -9,11 +10,7 @@ export enum RequestStatus {
 }
 
 @Entity()
-export class ConnectionRequest {
-  @ApiProperty({ example: 'uuid-v4-string' })
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
+export class ConnectionRequest extends BaseEntity {
   @ApiProperty({ type: () => User })
   @ManyToOne(() => User, (user) => user.sentRequests)
   @JoinColumn({ name: 'student_id' })
@@ -31,8 +28,4 @@ export class ConnectionRequest {
     default: RequestStatus.PENDING,
   })
   status: RequestStatus;
-
-  @ApiProperty()
-  @CreateDateColumn({ name: 'created_at' })
-  createdAt: Date;
 }

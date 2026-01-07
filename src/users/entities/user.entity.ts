@@ -1,5 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToMany, JoinTable, OneToMany } from 'typeorm';
+import { Entity, Column, ManyToMany, JoinTable, OneToMany } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
+import { Exclude } from 'class-transformer';
+import { BaseEntity } from '../../common/entities/base.entity';
 import { ConnectionRequest } from './connection-request.entity';
 
 export enum UserRole {
@@ -9,17 +11,14 @@ export enum UserRole {
 }
 
 @Entity()
-export class User {
-  @ApiProperty({ example: 'uuid-v4-string' })
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
+export class User extends BaseEntity {
   @ApiProperty({ example: 'user@example.com' })
   @Column({ unique: true })
   email: string;
 
+  @Exclude()
   @Column()
-  password: string; // Exclude from Swagger response if possible, but identifying mapped prop for now
+  password: string;
 
   @ApiProperty({ example: 'John Doe' })
   @Column()
@@ -39,14 +38,6 @@ export class User {
     default: UserRole.STUDENT,
   })
   role: UserRole;
-
-  @ApiProperty()
-  @CreateDateColumn({ name: 'created_at' })
-  createdAt: Date;
-
-  @ApiProperty()
-  @UpdateDateColumn({ name: 'updated_at' })
-  updatedAt: Date;
 
   @ManyToMany(() => User, (user) => user.mentors)
   @JoinTable({

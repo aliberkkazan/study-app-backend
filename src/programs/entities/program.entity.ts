@@ -1,13 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, JoinColumn } from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { ApiProperty } from '@nestjs/swagger';
+import { BaseEntity } from '../../common/entities/base.entity';
 
 @Entity()
-export class Program {
-  @ApiProperty({ example: 'uuid-v4-string' })
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
+export class Program extends BaseEntity {
   @ApiProperty({ example: 'Math 101' })
   @Column()
   title: string;
@@ -37,12 +34,4 @@ export class Program {
   @ManyToOne(() => User, { eager: false })
   @JoinColumn({ name: 'mentor_id' })
   mentor: User;
-
-  @ApiProperty()
-  @CreateDateColumn({ name: 'created_at' })
-  createdAt: Date;
-
-  @ApiProperty()
-  @UpdateDateColumn({ name: 'updated_at', update: true, insert: false })
-  updatedAt: Date;
 }

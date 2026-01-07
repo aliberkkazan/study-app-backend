@@ -1,6 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, JoinColumn } from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { ApiProperty } from '@nestjs/swagger';
+import { BaseEntity } from '../../common/entities/base.entity';
 
 export enum SubmissionStatus {
   PENDING = 'pending',
@@ -9,11 +10,7 @@ export enum SubmissionStatus {
 }
 
 @Entity()
-export class Submission {
-  @ApiProperty({ example: 'uuid-v4-string' })
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
+export class Submission extends BaseEntity {
   @ApiProperty({ example: 'https://example.com/image.jpg' })
   @Column({ name: 'image_url' })
   imageUrl: string;
@@ -34,12 +31,4 @@ export class Submission {
   @ManyToOne(() => User, { eager: true })
   @JoinColumn({ name: 'student_id' })
   student: User;
-
-  @ApiProperty()
-  @CreateDateColumn({ name: 'created_at' })
-  createdAt: Date;
-
-  @ApiProperty()
-  @UpdateDateColumn({ name: 'updated_at' })
-  updatedAt: Date;
 }
