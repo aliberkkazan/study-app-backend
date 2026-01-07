@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { createClient } from '@supabase/supabase-js';
 import { ConfigService } from '@nestjs/config';
 
@@ -7,31 +7,34 @@ export class FilesService {
   private supabase;
 
   constructor(private configService: ConfigService) {
-    this.supabase = createClient(
-      this.configService.get<string>('SUPABASE_URL')!,
-      this.configService.get<string>('SUPABASE_ANON_KEY')!,
-    );
+    const supabaseUrl = this.configService.get<string>('SUPABASE_URL')!;
+    const supabaseKey = this.configService.get<string>('SUPABASE_SERVICE_ROLE_KEY') || this.configService.get<string>('SUPABASE_ANON_KEY')!;
+    
+    this.supabase = createClient(supabaseUrl, supabaseKey);
   }
 
+  // ... (keep uploadFile as is or update similarly if needed, assuming user uses uploadBase64File)
+
   async uploadFile(file: Express.Multer.File): Promise<string> {
-    const fileExt = file.originalname.split('.').pop();
-    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-    const filePath = `test-results/${fileName}`;
-
-    const { data, error } = await this.supabase.storage
-      .from('uploads')
-      .upload(filePath, file.buffer, {
-        contentType: file.mimetype,
-        upsert: false,
-      });
-
-    if (error) throw new BadRequestException(`Upload failed: ${error.message}`);
-
-    const { data: publicData } = this.supabase.storage
-      .from('uploads')
-      .getPublicUrl(filePath);
-
-    return publicData.publicUrl;
+      // skipping for brevity as we focus on base64
+      const fileExt = file.originalname.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `test-results/${fileName}`;
+  
+      const { data, error } = await this.supabase.storage
+        .from('uploads')
+        .upload(filePath, file.buffer, {
+          contentType: file.mimetype,
+          upsert: false,
+        });
+  
+      if (error) throw new BadRequestException(`Upload failed: ${error.message}`);
+  
+      const { data: publicData } = this.supabase.storage
+        .from('uploads')
+        .getPublicUrl(filePath);
+  
+      return publicData.publicUrl;
   }
 
   async uploadBase64File(base64String: string, folderPath?: string): Promise<string> {
@@ -53,16 +56,18 @@ export class FilesService {
     const filePath = folderPath ? `${folderPath}/${fileName}` : `submissions/${fileName}`;
 
     const { error } = await this.supabase.storage
-      .from('uploads')
+      .from('studyapp-assets')
       .upload(filePath, buffer, {
         contentType: `image/${extension}`,
         upsert: false,
       });
 
-    if (error) throw new BadRequestException(`Upload failed: ${error.message}`);
+    if (error) {
+        throw new BadRequestException(`Upload failed: ${error.message}`);
+    }
 
     const { data: publicData } = this.supabase.storage
-      .from('uploads')
+      .from('studyapp-assets')
       .getPublicUrl(filePath);
 
     return publicData.publicUrl;

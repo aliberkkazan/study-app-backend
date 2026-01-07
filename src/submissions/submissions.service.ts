@@ -29,15 +29,21 @@ export class SubmissionsService {
 
     if (base64Data) {
       const student = await this.usersService.findOne(createSubmissionDto.studentId);
-      if (!student) throw new NotFoundException('Student not found');
+      if (!student) {
+        throw new NotFoundException('Student not found');
+      }
       
       const slug = student.name
         .trim()
         .toLowerCase()
         .replace(/ /g, '-')
         .replace(/[^\w-]+/g, '');
-        
-      imageUrl = await this.filesService.uploadBase64File(base64Data, `${slug}/submissions`);
+      
+      try {
+        imageUrl = await this.filesService.uploadBase64File(base64Data, `${slug}/submissions`);
+      } catch (error) {
+        throw error;
+      }
     }
 
     // Create a clean object for the entity, excluding imageBase64
