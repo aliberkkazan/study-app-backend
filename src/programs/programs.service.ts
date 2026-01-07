@@ -21,8 +21,19 @@ export class ProgramsService {
     return this.programsRepository.save(program);
   }
 
-  findAll() {
-    return this.programsRepository.find({ relations: ['student', 'mentor'] });
+  findAll(filter?: Record<string, any>) {
+    const where: any = {};
+
+    if (filter) {
+      if (filter.studentId) where.student = { id: filter.studentId };
+      if (filter.mentorId) where.mentor = { id: filter.mentorId };
+      // Can add more filters here easily
+    }
+
+    return this.programsRepository.find({ 
+      where,
+      relations: ['student', 'mentor'] 
+    });
   }
 
   async findOne(id: string) {

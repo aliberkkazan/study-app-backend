@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { ProgramsService } from './programs.service';
 import { CreateProgramDto } from './dto/create-program.dto';
 import { UpdateProgramDto } from './dto/update-program.dto';
+import { BaseFilterDto } from '../common/dto/base-filter.dto';
 
 @ApiBearerAuth('JWT-auth')
 @Controller('programs')
@@ -15,8 +16,8 @@ export class ProgramsController {
   }
 
   @Get()
-  findAll() {
-    return this.programsService.findAll();
+  findAll(@Query() query: BaseFilterDto) {
+    return this.programsService.findAll(query.filter);
   }
 
   @Get(':id')

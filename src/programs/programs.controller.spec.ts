@@ -4,11 +4,23 @@ import { ProgramsService } from './programs.service';
 
 describe('ProgramsController', () => {
   let controller: ProgramsController;
+  let module: TestingModule;
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       controllers: [ProgramsController],
-      providers: [ProgramsService],
+      providers: [
+        {
+          provide: ProgramsService,
+          useValue: {
+            create: jest.fn(),
+            findAll: jest.fn(),
+            findOne: jest.fn(),
+            update: jest.fn(),
+            remove: jest.fn(),
+          },
+        },
+      ],
     }).compile();
 
     controller = module.get<ProgramsController>(ProgramsController);
@@ -16,5 +28,11 @@ describe('ProgramsController', () => {
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
+  });
+
+  it('should call findAll with filter object', async () => {
+    const filter = { studentId: 1, mentorId: 2 };
+    await controller.findAll({ filter } as any);
+    expect(module.get(ProgramsService).findAll).toHaveBeenCalledWith(filter);
   });
 });
