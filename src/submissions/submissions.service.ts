@@ -19,24 +19,36 @@ export class SubmissionsService {
 
   async create(createSubmissionDto: CreateSubmissionDto) {
     let imageUrl = createSubmissionDto.imageUrl;
+    let base64Data = createSubmissionDto.imageBase64;
 
-    if (createSubmissionDto.imageBase64) {
+    // Check if imageUrl is actually a base64 string (user mistake handling)
+    if (imageUrl && imageUrl.startsWith('data:image')) {
+      base64Data = imageUrl;
+      imageUrl = undefined; // Clear it so we don't save the base64 string
+    }
+
+    if (base64Data) {
       const student = await this.usersService.findOne(createSubmissionDto.studentId);
       if (!student) throw new NotFoundException('Student not found');
       
       const slug = student.name
+        .trim()
         .toLowerCase()
         .replace(/ /g, '-')
         .replace(/[^\w-]+/g, '');
         
-      imageUrl = await this.filesService.uploadBase64File(createSubmissionDto.imageBase64, `${slug}/submissions`);
+      imageUrl = await this.filesService.uploadBase64File(base64Data, `${slug}/submissions`);
     }
 
-    const submission = this.submissionsRepository.create({
+    // Create a clean object for the entity, excluding imageBase64
+    const submissionData = {
       ...createSubmissionDto,
       imageUrl,
       student: { id: createSubmissionDto.studentId } as any
-    });
+    };
+    delete submissionData.imageBase64; // Ensure this is removed if it somehow persists
+
+    const submission = this.submissionsRepository.create(submissionData);
     return this.submissionsRepository.save(submission);
   }
 
