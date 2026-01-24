@@ -15,7 +15,7 @@ export class UsersService {
     private usersRepository: Repository<User>,
     @InjectRepository(ConnectionRequest)
     private requestRepository: Repository<ConnectionRequest>,
-  ) {}
+  ) { }
 
   async create(createUserDto: CreateUserDto): Promise<User> {
     const existingUser = await this.usersRepository.findOneBy({ email: createUserDto.email });
@@ -78,10 +78,10 @@ export class UsersService {
     if (!student) {
       throw new NotFoundException(`Student with ID ${studentId} not found`);
     }
-    
+
     // Check if role valid (optional but good practice)
     if (mentor.role !== 'mentor' && mentor.role !== 'admin') {
-         // Flexible with admin
+      // Flexible with admin
     }
 
     // Check if already assigned
@@ -99,8 +99,11 @@ export class UsersService {
     return `This action updates a #${id} user`;
   }
 
-  remove(id: string) {
-    return `This action removes a #${id} user`;
+  async remove(id: string): Promise<void> {
+    const result = await this.usersRepository.delete(id);
+    if (result.affected === 0) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
   }
 
   private generateMentorCode(): string {
@@ -177,7 +180,7 @@ export class UsersService {
       const now = new Date();
       const lastUpdate = new Date(user.lastMentorCodeUpdate);
       const hoursDiff = (now.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60);
-      
+
       if (hoursDiff < 12) {
         throw new BadRequestException(`You can only refresh your code once every 12 hours. Try again in ${Math.ceil(12 - hoursDiff)} hours.`);
       }
@@ -185,7 +188,7 @@ export class UsersService {
 
     user.mentorCode = this.generateMentorCode();
     user.lastMentorCodeUpdate = new Date();
-    
+
     return this.usersRepository.save(user);
   }
 
