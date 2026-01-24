@@ -5,6 +5,8 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User, UserRole } from './entities/user.entity';
 import { ConnectionRequest, RequestStatus } from './entities/connection-request.entity';
+import { Program } from '../programs/entities/program.entity';
+import { Submission } from '../submissions/entities/submission.entity';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 
@@ -15,6 +17,10 @@ export class UsersService {
     private usersRepository: Repository<User>,
     @InjectRepository(ConnectionRequest)
     private requestRepository: Repository<ConnectionRequest>,
+    @InjectRepository(Program)
+    private programRepository: Repository<Program>,
+    @InjectRepository(Submission)
+    private submissionRepository: Repository<Submission>,
   ) { }
 
   async create(createUserDto: CreateUserDto): Promise<User> {
@@ -109,14 +115,12 @@ export class UsersService {
     await this.requestRepository.delete({ student: { id } });
     await this.requestRepository.delete({ mentor: { id } });
 
-    // Remove from all mentors' students list (clean up join table)
-    // This part is trickier without join table access, but if we remove the user, 
-    // TypeORM should handle the join table deletion if defined correctly, 
-    // or we might get another FK error on 'user_students'. 
-    // Let's assume user_students join table has CASCADE on delete by default TypeORM behavior for ManyToMany.
-    // If not, we'd need to explicitly remove them from relations.
-    // Given the previous error was specifically about connection_request, let's fix that first.
+    // Manual cascade: delete related submissions
+    await this.submissionRepository.delete({ student: { id } });
 
+    // Manual cascade: delete related programs (as student or mentor)
+    await this.programRepository.delete({ student: { id } });
+    await this.programRepository.delete({ mentor: { id } });
     await this.usersRepository.delete(id);
   }
 
