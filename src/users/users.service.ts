@@ -106,10 +106,18 @@ export class UsersService {
   }
 
   async remove(id: string): Promise<void> {
-    const user = await this.usersRepository.findOneBy({ id });
+    const user = await this.usersRepository.findOne({
+      where: { id },
+      relations: ['students', 'mentors'],
+    });
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
+
+    // Manual cascade: clear ManyToMany relations (removes from user_students junction table)
+    user.students = [];
+    user.mentors = [];
+    await this.usersRepository.save(user);
 
     // Manual cascade: delete all connection requests where user is involved
     await this.requestRepository.delete({ student: { id } });
