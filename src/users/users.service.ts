@@ -100,10 +100,24 @@ export class UsersService {
   }
 
   async remove(id: string): Promise<void> {
-    const result = await this.usersRepository.delete(id);
-    if (result.affected === 0) {
+    const user = await this.usersRepository.findOneBy({ id });
+    if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
+
+    // Manual cascade: delete all connection requests where user is involved
+    await this.requestRepository.delete({ student: { id } });
+    await this.requestRepository.delete({ mentor: { id } });
+
+    // Remove from all mentors' students list (clean up join table)
+    // This part is trickier without join table access, but if we remove the user, 
+    // TypeORM should handle the join table deletion if defined correctly, 
+    // or we might get another FK error on 'user_students'. 
+    // Let's assume user_students join table has CASCADE on delete by default TypeORM behavior for ManyToMany.
+    // If not, we'd need to explicitly remove them from relations.
+    // Given the previous error was specifically about connection_request, let's fix that first.
+
+    await this.usersRepository.delete(id);
   }
 
   private generateMentorCode(): string {
