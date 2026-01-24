@@ -12,12 +12,12 @@ export enum RequestStatus {
 @Entity()
 export class ConnectionRequest extends BaseEntity {
   @ApiProperty({ type: () => User })
-  @ManyToOne(() => User, (user) => user.sentRequests)
+  @ManyToOne(() => User, (user) => user.sentRequests, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'student_id' })
   student: User;
 
   @ApiProperty({ type: () => User })
-  @ManyToOne(() => User, (user) => user.receivedRequests)
+  @ManyToOne(() => User, (user) => user.receivedRequests, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'mentor_id' })
   mentor: User;
 
