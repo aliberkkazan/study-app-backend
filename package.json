@@ -1,8 +1,8 @@
 {
   "name": "study-app-backend",
-  "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "version": "1.0.0",
+  "description": "NestJS REST API for the Study App mentor-student platform.",
+  "author": "Ali Berk Kazan",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
