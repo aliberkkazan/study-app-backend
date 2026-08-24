@@ -1,0 +1,124 @@
+import { MigrationInterface, QueryRunner } from "typeorm";
+
+export class AddExamRoadmapEntities1787578714241 implements MigrationInterface {
+    name = 'AddExamRoadmapEntities1787578714241'
+
+    public async up(queryRunner: QueryRunner): Promise<void> {
+        await queryRunner.query(`ALTER TABLE "connection_request" DROP CONSTRAINT "FK_11161a99b4ad39882ba2d430ef7"`);
+        await queryRunner.query(`ALTER TABLE "connection_request" DROP CONSTRAINT "FK_a376efed02760e9c7d4463d2efa"`);
+        await queryRunner.query(`ALTER TABLE "task" DROP CONSTRAINT "FK_6df3ee04b76d1df250a498cfa4d"`);
+        await queryRunner.query(`ALTER TABLE "task" DROP CONSTRAINT "FK_e874afb5dd039f53c743fccfe32"`);
+        await queryRunner.query(`CREATE TABLE "study_result" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "active" boolean NOT NULL DEFAULT true, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "correct_count" integer, "wrong_count" integer, "notes" character varying, "focus_quality" integer, "session_id" uuid, CONSTRAINT "REL_9f22fe90e485215977eef8690f" UNIQUE ("session_id"), CONSTRAINT "PK_aaa3cb439781c1960486806ddf7" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE TYPE "public"."study_session_status_enum" AS ENUM('ACTIVE', 'FINISHED', 'CANCELLED')`);
+        await queryRunner.query(`CREATE TABLE "study_session" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "active" boolean NOT NULL DEFAULT true, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "status" "public"."study_session_status_enum" NOT NULL DEFAULT 'ACTIVE', "start_time" TIMESTAMP NOT NULL, "end_time" TIMESTAMP, "target_duration" integer, "actual_duration" integer, "idempotency_key" character varying, "user_id" uuid, "task_id" uuid, CONSTRAINT "UQ_7381ae900c9b3004584876eccd2" UNIQUE ("idempotency_key"), CONSTRAINT "PK_d09225f8e9d2b6682e3b13c46e0" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE TABLE "country" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "active" boolean NOT NULL DEFAULT true, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "code" character varying(2) NOT NULL, "name" character varying NOT NULL, "native_name" character varying, "default_timezone" character varying NOT NULL DEFAULT 'Europe/Istanbul', CONSTRAINT "UQ_8ff4c23dc9a3f3856555bd86186" UNIQUE ("code"), CONSTRAINT "PK_bf6e37c231c4f4ea56dcd887269" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE TABLE "education_system" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "active" boolean NOT NULL DEFAULT true, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "code" character varying NOT NULL, "name" character varying NOT NULL, "native_name" character varying, "country_id" uuid NOT NULL, CONSTRAINT "UQ_9a4ab53613be752c1a5d294bb28" UNIQUE ("code"), CONSTRAINT "PK_ba68b3479b5efa9a345121cff0e" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE TABLE "exam" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "active" boolean NOT NULL DEFAULT true, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "code" character varying NOT NULL, "name" character varying NOT NULL, "native_name" character varying, "description" text, "education_system_id" uuid NOT NULL, CONSTRAINT "UQ_d409d802e14aa4bcd47ef993bb0" UNIQUE ("code"), CONSTRAINT "PK_56071ab3a94aeac01f1b5ab74aa" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE TYPE "public"."topic_difficulty_enum" AS ENUM('EASY', 'MEDIUM', 'HARD')`);
+        await queryRunner.query(`CREATE TABLE "topic" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "active" boolean NOT NULL DEFAULT true, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "code" character varying NOT NULL, "name" character varying NOT NULL, "order_index" integer NOT NULL DEFAULT '1', "estimated_hours" double precision NOT NULL DEFAULT '4', "importance_weight" integer NOT NULL DEFAULT '3', "difficulty" "public"."topic_difficulty_enum" NOT NULL DEFAULT 'MEDIUM', "prerequisites" text, "subject_id" uuid NOT NULL, CONSTRAINT "PK_33aa4ecb4e4f20aa0157ea7ef61" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE TYPE "public"."subject_category_enum" AS ENUM('MATHEMATICS', 'NATURAL_SCIENCES', 'SOCIAL_SCIENCES', 'LANGUAGE_LITERATURE', 'FOREIGN_LANGUAGE', 'OTHER')`);
+        await queryRunner.query(`CREATE TABLE "subject" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "active" boolean NOT NULL DEFAULT true, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "code" character varying NOT NULL, "name" character varying NOT NULL, "category" "public"."subject_category_enum" NOT NULL DEFAULT 'OTHER', "order_index" integer NOT NULL DEFAULT '1', "color_code" character varying NOT NULL DEFAULT '#4F46E5', "icon_name" character varying NOT NULL DEFAULT 'book-outline', "exam_section_id" uuid NOT NULL, CONSTRAINT "PK_12eee115462e38d62e5455fc054" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE TABLE "exam_section" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "active" boolean NOT NULL DEFAULT true, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "code" character varying NOT NULL, "name" character varying NOT NULL, "order_index" integer NOT NULL DEFAULT '1', "description" text, "exam_version_id" uuid NOT NULL, CONSTRAINT "PK_de061ef85e1dac90d5620f33634" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE TABLE "exam_version" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "active" boolean NOT NULL DEFAULT true, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "version" character varying NOT NULL, "display_name" character varying NOT NULL, "valid_from" TIMESTAMP WITH TIME ZONE NOT NULL, "valid_to" TIMESTAMP WITH TIME ZONE, "official_source_url" character varying, "verified_at" TIMESTAMP WITH TIME ZONE, "verified_by" character varying, "is_current" boolean NOT NULL DEFAULT true, "exam_id" uuid NOT NULL, CONSTRAINT "PK_740c0199e275eb3e1ea36a09455" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE TYPE "public"."study_profile_track_enum" AS ENUM('SAYISAL', 'ESIT_AGIRLIK', 'SOZEL', 'DIL', 'TYT_ONLY')`);
+        await queryRunner.query(`CREATE TYPE "public"."study_profile_current_level_enum" AS ENUM('BEGINNER', 'INTERMEDIATE', 'ADVANCED')`);
+        await queryRunner.query(`CREATE TABLE "study_profile" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "active" boolean NOT NULL DEFAULT true, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "user_id" uuid NOT NULL, "target_exam_version_id" uuid, "track" "public"."study_profile_track_enum" NOT NULL DEFAULT 'SAYISAL', "target_exam_date" TIMESTAMP WITH TIME ZONE NOT NULL, "target_score" double precision, "target_rank" integer, "weekly_availability_minutes" integer NOT NULL DEFAULT '1200', "daily_availability" jsonb, "current_level" "public"."study_profile_current_level_enum" NOT NULL DEFAULT 'INTERMEDIATE', "timezone" character varying NOT NULL DEFAULT 'Europe/Istanbul', CONSTRAINT "UQ_01b24904c8e90b329d752ee0261" UNIQUE ("user_id"), CONSTRAINT "REL_01b24904c8e90b329d752ee026" UNIQUE ("user_id"), CONSTRAINT "PK_5029812caa90643ffe46303707d" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE TABLE "diagnostic_result" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "active" boolean NOT NULL DEFAULT true, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "user_id" uuid NOT NULL, "exam_version_id" uuid NOT NULL, "title" character varying NOT NULL, "date_taken" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "section_scores" jsonb NOT NULL, "total_net_score" double precision NOT NULL, "notes" text, CONSTRAINT "PK_9cea04a4082f59e620eec689a97" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE TYPE "public"."roadmap_item_type_enum" AS ENUM('LEARN', 'PRACTICE', 'REVIEW', 'SIMULATE')`);
+        await queryRunner.query(`CREATE TYPE "public"."roadmap_item_status_enum" AS ENUM('PENDING', 'IN_PROGRESS', 'COMPLETED', 'SKIPPED')`);
+        await queryRunner.query(`CREATE TABLE "roadmap_item" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "active" boolean NOT NULL DEFAULT true, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "roadmap_version_id" uuid NOT NULL, "subject_id" uuid, "topic_id" uuid, "type" "public"."roadmap_item_type_enum" NOT NULL DEFAULT 'LEARN', "target_week_number" integer NOT NULL, "target_date" TIMESTAMP WITH TIME ZONE, "estimated_minutes" integer NOT NULL DEFAULT '120', "target_outcome" character varying NOT NULL, "status" "public"."roadmap_item_status_enum" NOT NULL DEFAULT 'PENDING', "linked_task_id" character varying, CONSTRAINT "PK_0245571afa793d86eae611dd693" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE INDEX "IDX_478e29f0c71a676f259f697ee7" ON "roadmap_item" ("roadmap_version_id", "target_week_number") `);
+        await queryRunner.query(`CREATE TYPE "public"."roadmap_version_generated_reason_enum" AS ENUM('INITIAL', 'REPLAN_MISSED', 'REPLAN_PROFILE_CHANGE', 'MANUAL')`);
+        await queryRunner.query(`CREATE TABLE "roadmap_version" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "active" boolean NOT NULL DEFAULT true, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "roadmap_id" uuid NOT NULL, "version_number" integer NOT NULL DEFAULT '1', "is_current" boolean NOT NULL DEFAULT true, "generated_reason" "public"."roadmap_version_generated_reason_enum" NOT NULL DEFAULT 'INITIAL', "total_weeks" integer NOT NULL, CONSTRAINT "PK_b3df63f7a259f8378c831bed4d4" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE TABLE "replan_event" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "active" boolean NOT NULL DEFAULT true, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "roadmap_id" uuid NOT NULL, "from_version_id" character varying NOT NULL, "to_version_id" character varying NOT NULL, "trigger_reason" character varying NOT NULL, "snapshot" jsonb NOT NULL, CONSTRAINT "PK_113a1a736aec1d9617dbc3474d3" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE TYPE "public"."roadmap_status_enum" AS ENUM('ACTIVE', 'SUPERSEDED', 'COMPLETED', 'ARCHIVED')`);
+        await queryRunner.query(`CREATE TABLE "roadmap" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "active" boolean NOT NULL DEFAULT true, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "user_id" uuid NOT NULL, "study_profile_id" uuid, "status" "public"."roadmap_status_enum" NOT NULL DEFAULT 'ACTIVE', "start_date" TIMESTAMP WITH TIME ZONE NOT NULL, "target_exam_date" TIMESTAMP WITH TIME ZONE NOT NULL, CONSTRAINT "PK_8652e486587a4e35070c86d2232" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE TYPE "public"."evidence_status_enum" AS ENUM('pending', 'approved', 'rejected')`);
+        await queryRunner.query(`CREATE TABLE "evidence" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "active" boolean NOT NULL DEFAULT true, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "image_url" character varying NOT NULL, "status" "public"."evidence_status_enum" NOT NULL DEFAULT 'pending', "feedback" text, "student_id" uuid, CONSTRAINT "PK_b864cb5d49854f89917fc0b44b9" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`ALTER TABLE "connection_request" ADD CONSTRAINT "FK_11161a99b4ad39882ba2d430ef7" FOREIGN KEY ("student_id") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "connection_request" ADD CONSTRAINT "FK_a376efed02760e9c7d4463d2efa" FOREIGN KEY ("mentor_id") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "task" ADD CONSTRAINT "FK_cde1069d3c3c483430e8fed5306" FOREIGN KEY ("owner_id") REFERENCES "user"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "task" ADD CONSTRAINT "FK_60da0f20d1d85d5d567b7b97f5e" FOREIGN KEY ("assigned_by") REFERENCES "user"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "study_result" ADD CONSTRAINT "FK_9f22fe90e485215977eef8690fd" FOREIGN KEY ("session_id") REFERENCES "study_session"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "study_session" ADD CONSTRAINT "FK_fda7d490f7c7393f9ae8dc642c1" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "study_session" ADD CONSTRAINT "FK_375a1571557bd0fd167f444144e" FOREIGN KEY ("task_id") REFERENCES "task"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "education_system" ADD CONSTRAINT "FK_3a6d51f79f334cc50daa1445042" FOREIGN KEY ("country_id") REFERENCES "country"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "exam" ADD CONSTRAINT "FK_5d0c9421fb7be601fb5859faf18" FOREIGN KEY ("education_system_id") REFERENCES "education_system"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "topic" ADD CONSTRAINT "FK_e151e576dcdfdd17cf11242fc42" FOREIGN KEY ("subject_id") REFERENCES "subject"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "subject" ADD CONSTRAINT "FK_ac88dd6d1de382db363f9fa2d3c" FOREIGN KEY ("exam_section_id") REFERENCES "exam_section"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "exam_section" ADD CONSTRAINT "FK_a5e0da866dd9ce4ececc82dd30b" FOREIGN KEY ("exam_version_id") REFERENCES "exam_version"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "exam_version" ADD CONSTRAINT "FK_6bf19297048162b6e7bb0bdcaef" FOREIGN KEY ("exam_id") REFERENCES "exam"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "study_profile" ADD CONSTRAINT "FK_01b24904c8e90b329d752ee0261" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "study_profile" ADD CONSTRAINT "FK_850117d468eddf43d7311443a76" FOREIGN KEY ("target_exam_version_id") REFERENCES "exam_version"("id") ON DELETE SET NULL ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "diagnostic_result" ADD CONSTRAINT "FK_7c2c772e73a9c6f1396f04636a6" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "diagnostic_result" ADD CONSTRAINT "FK_43b67aea650a6c9f4c810bd5bb8" FOREIGN KEY ("exam_version_id") REFERENCES "exam_version"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "roadmap_item" ADD CONSTRAINT "FK_3a434adb70a3c91ef1838224ff1" FOREIGN KEY ("roadmap_version_id") REFERENCES "roadmap_version"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "roadmap_item" ADD CONSTRAINT "FK_633912971b8a304ba17ad493fc3" FOREIGN KEY ("subject_id") REFERENCES "subject"("id") ON DELETE SET NULL ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "roadmap_item" ADD CONSTRAINT "FK_b8b2271bf99e0659e056d46f58f" FOREIGN KEY ("topic_id") REFERENCES "topic"("id") ON DELETE SET NULL ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "roadmap_version" ADD CONSTRAINT "FK_47afb12bba87f8fc10665295df4" FOREIGN KEY ("roadmap_id") REFERENCES "roadmap"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "replan_event" ADD CONSTRAINT "FK_3d76d526f8c624df1f074b148cd" FOREIGN KEY ("roadmap_id") REFERENCES "roadmap"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "roadmap" ADD CONSTRAINT "FK_97f9cb225142f8c7c8090e3def6" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "roadmap" ADD CONSTRAINT "FK_2f1efa9dd867a5f599e379e6eef" FOREIGN KEY ("study_profile_id") REFERENCES "study_profile"("id") ON DELETE SET NULL ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "evidence" ADD CONSTRAINT "FK_bfce5dc57137a26424d74c78fcd" FOREIGN KEY ("student_id") REFERENCES "user"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
+    }
+
+    public async down(queryRunner: QueryRunner): Promise<void> {
+        await queryRunner.query(`ALTER TABLE "evidence" DROP CONSTRAINT "FK_bfce5dc57137a26424d74c78fcd"`);
+        await queryRunner.query(`ALTER TABLE "roadmap" DROP CONSTRAINT "FK_2f1efa9dd867a5f599e379e6eef"`);
+        await queryRunner.query(`ALTER TABLE "roadmap" DROP CONSTRAINT "FK_97f9cb225142f8c7c8090e3def6"`);
+        await queryRunner.query(`ALTER TABLE "replan_event" DROP CONSTRAINT "FK_3d76d526f8c624df1f074b148cd"`);
+        await queryRunner.query(`ALTER TABLE "roadmap_version" DROP CONSTRAINT "FK_47afb12bba87f8fc10665295df4"`);
+        await queryRunner.query(`ALTER TABLE "roadmap_item" DROP CONSTRAINT "FK_b8b2271bf99e0659e056d46f58f"`);
+        await queryRunner.query(`ALTER TABLE "roadmap_item" DROP CONSTRAINT "FK_633912971b8a304ba17ad493fc3"`);
+        await queryRunner.query(`ALTER TABLE "roadmap_item" DROP CONSTRAINT "FK_3a434adb70a3c91ef1838224ff1"`);
+        await queryRunner.query(`ALTER TABLE "diagnostic_result" DROP CONSTRAINT "FK_43b67aea650a6c9f4c810bd5bb8"`);
+        await queryRunner.query(`ALTER TABLE "diagnostic_result" DROP CONSTRAINT "FK_7c2c772e73a9c6f1396f04636a6"`);
+        await queryRunner.query(`ALTER TABLE "study_profile" DROP CONSTRAINT "FK_850117d468eddf43d7311443a76"`);
+        await queryRunner.query(`ALTER TABLE "study_profile" DROP CONSTRAINT "FK_01b24904c8e90b329d752ee0261"`);
+        await queryRunner.query(`ALTER TABLE "exam_version" DROP CONSTRAINT "FK_6bf19297048162b6e7bb0bdcaef"`);
+        await queryRunner.query(`ALTER TABLE "exam_section" DROP CONSTRAINT "FK_a5e0da866dd9ce4ececc82dd30b"`);
+        await queryRunner.query(`ALTER TABLE "subject" DROP CONSTRAINT "FK_ac88dd6d1de382db363f9fa2d3c"`);
+        await queryRunner.query(`ALTER TABLE "topic" DROP CONSTRAINT "FK_e151e576dcdfdd17cf11242fc42"`);
+        await queryRunner.query(`ALTER TABLE "exam" DROP CONSTRAINT "FK_5d0c9421fb7be601fb5859faf18"`);
+        await queryRunner.query(`ALTER TABLE "education_system" DROP CONSTRAINT "FK_3a6d51f79f334cc50daa1445042"`);
+        await queryRunner.query(`ALTER TABLE "study_session" DROP CONSTRAINT "FK_375a1571557bd0fd167f444144e"`);
+        await queryRunner.query(`ALTER TABLE "study_session" DROP CONSTRAINT "FK_fda7d490f7c7393f9ae8dc642c1"`);
+        await queryRunner.query(`ALTER TABLE "study_result" DROP CONSTRAINT "FK_9f22fe90e485215977eef8690fd"`);
+        await queryRunner.query(`ALTER TABLE "task" DROP CONSTRAINT "FK_60da0f20d1d85d5d567b7b97f5e"`);
+        await queryRunner.query(`ALTER TABLE "task" DROP CONSTRAINT "FK_cde1069d3c3c483430e8fed5306"`);
+        await queryRunner.query(`ALTER TABLE "connection_request" DROP CONSTRAINT "FK_a376efed02760e9c7d4463d2efa"`);
+        await queryRunner.query(`ALTER TABLE "connection_request" DROP CONSTRAINT "FK_11161a99b4ad39882ba2d430ef7"`);
+        await queryRunner.query(`DROP TABLE "evidence"`);
+        await queryRunner.query(`DROP TYPE "public"."evidence_status_enum"`);
+        await queryRunner.query(`DROP TABLE "roadmap"`);
+        await queryRunner.query(`DROP TYPE "public"."roadmap_status_enum"`);
+        await queryRunner.query(`DROP TABLE "replan_event"`);
+        await queryRunner.query(`DROP TABLE "roadmap_version"`);
+        await queryRunner.query(`DROP TYPE "public"."roadmap_version_generated_reason_enum"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_478e29f0c71a676f259f697ee7"`);
+        await queryRunner.query(`DROP TABLE "roadmap_item"`);
+        await queryRunner.query(`DROP TYPE "public"."roadmap_item_status_enum"`);
+        await queryRunner.query(`DROP TYPE "public"."roadmap_item_type_enum"`);
+        await queryRunner.query(`DROP TABLE "diagnostic_result"`);
+        await queryRunner.query(`DROP TABLE "study_profile"`);
+        await queryRunner.query(`DROP TYPE "public"."study_profile_current_level_enum"`);
+        await queryRunner.query(`DROP TYPE "public"."study_profile_track_enum"`);
+        await queryRunner.query(`DROP TABLE "exam_version"`);
+        await queryRunner.query(`DROP TABLE "exam_section"`);
+        await queryRunner.query(`DROP TABLE "subject"`);
+        await queryRunner.query(`DROP TYPE "public"."subject_category_enum"`);
+        await queryRunner.query(`DROP TABLE "topic"`);
+        await queryRunner.query(`DROP TYPE "public"."topic_difficulty_enum"`);
+        await queryRunner.query(`DROP TABLE "exam"`);
+        await queryRunner.query(`DROP TABLE "education_system"`);
+        await queryRunner.query(`DROP TABLE "country"`);
+        await queryRunner.query(`DROP TABLE "study_session"`);
+        await queryRunner.query(`DROP TYPE "public"."study_session_status_enum"`);
+        await queryRunner.query(`DROP TABLE "study_result"`);
+        await queryRunner.query(`ALTER TABLE "task" ADD CONSTRAINT "FK_e874afb5dd039f53c743fccfe32" FOREIGN KEY ("assigned_by") REFERENCES "user"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "task" ADD CONSTRAINT "FK_6df3ee04b76d1df250a498cfa4d" FOREIGN KEY ("owner_id") REFERENCES "user"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "connection_request" ADD CONSTRAINT "FK_a376efed02760e9c7d4463d2efa" FOREIGN KEY ("mentor_id") REFERENCES "user"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "connection_request" ADD CONSTRAINT "FK_11161a99b4ad39882ba2d430ef7" FOREIGN KEY ("student_id") REFERENCES "user"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
+    }
+
+}

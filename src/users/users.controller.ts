@@ -1,8 +1,10 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Req, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { User } from './entities/user.entity';
 
 @ApiBearerAuth('JWT-auth')
 @Controller('users')
@@ -20,23 +22,23 @@ export class UsersController {
   }
 
   @Get('profile')
-  getProfile(@Req() req: any) {
-    return req.user;
+  getProfile(@CurrentUser() user: User) {
+    return user;
   }
 
   @Post('request')
-  async createRequest(@Req() req: any, @Body('code') code: string) {
-    return this.usersService.createRequest(req.user.id, code);
+  async createRequest(@CurrentUser() user: User, @Body('code') code: string) {
+    return this.usersService.createRequest(user.id, code);
   }
 
   @Get('requests')
-  async getMyRequests(@Req() req: any) {
-    return this.usersService.getMyPendingRequests(req.user.id);
+  async getMyRequests(@CurrentUser() user: User) {
+    return this.usersService.getMyPendingRequests(user.id);
   }
 
   @Patch('request/:id')
-  async respondToRequest(@Req() req: any, @Param('id') id: string, @Body('status') status: 'approved' | 'rejected') {
-    return this.usersService.respondToRequest(req.user.id, id, status);
+  async respondToRequest(@CurrentUser() user: User, @Param('id') id: string, @Body('status') status: 'approved' | 'rejected') {
+    return this.usersService.respondToRequest(user.id, id, status);
   }
 
   @Get(':id')
@@ -55,12 +57,12 @@ export class UsersController {
   }
 
   @Post('mentor-code/refresh')
-  async refreshMentorCode(@Req() req: any) {
-    return this.usersService.refreshMentorCode(req.user.id);
+  async refreshMentorCode(@CurrentUser() user: User) {
+    return this.usersService.refreshMentorCode(user.id);
   }
 
   @Delete('students/:studentId')
-  async removeStudent(@Req() req: any, @Param('studentId') studentId: string) {
-    return this.usersService.removeStudent(req.user.id, studentId);
+  async removeStudent(@CurrentUser() user: User, @Param('studentId') studentId: string) {
+    return this.usersService.removeStudent(user.id, studentId);
   }
 }
