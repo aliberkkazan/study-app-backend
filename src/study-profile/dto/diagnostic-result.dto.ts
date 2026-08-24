@@ -17,14 +17,17 @@ export class CreateDiagnosticResultDto {
 
   @ApiProperty({
     example: {
-      TYT_TURKCE: { correct: 32, wrong: 6, net: 30.5 },
-      TYT_MATEMATIK: { correct: 28, wrong: 4, net: 27.0 },
+      SAT_RW: { correct: 48, wrong: 6, scaledScore: 680 },
+      SAT_MATH: { correct: 40, wrong: 4, scaledScore: 720 },
     },
   })
   @IsObject()
-  sectionScores: Record<string, { correct: number; wrong: number; net: number; topics?: Record<string, number> }>;
+  sectionScores: Record<
+    string,
+    { correct: number; wrong: number; net?: number; scaledScore?: number; topics?: Record<string, number> }
+  >;
 
-  @ApiProperty({ example: 86.0 })
+  @ApiProperty({ example: 1400, description: 'Total scaled score (e.g. 1400 for SAT) or total net score (e.g. 86.0 for YKS)' })
   @IsNumber()
   totalNetScore: number;
 

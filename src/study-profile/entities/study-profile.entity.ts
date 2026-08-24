@@ -10,6 +10,10 @@ export enum StudyTrack {
   SOZEL = 'SOZEL',
   DIL = 'DIL',
   TYT_ONLY = 'TYT_ONLY',
+  SAT_ALL = 'SAT_ALL',
+  SAT_MATH_FOCUS = 'SAT_MATH_FOCUS',
+  SAT_RW_FOCUS = 'SAT_RW_FOCUS',
+  GENERAL = 'GENERAL',
 }
 
 export enum UserSkillLevel {
@@ -48,9 +52,13 @@ export class StudyProfile extends BaseEntity {
   @Column({ name: 'target_exam_date', type: 'timestamptz' })
   targetExamDate: Date;
 
-  @ApiProperty({ example: 450, required: false })
+  @ApiProperty({ example: 1450, required: false })
   @Column({ name: 'target_score', type: 'float', nullable: true })
   targetScore?: number;
+
+  @ApiProperty({ example: 1180, required: false, description: 'Baseline or current diagnostic score' })
+  @Column({ name: 'current_score', type: 'float', nullable: true })
+  currentScore?: number;
 
   @ApiProperty({ example: 10000, required: false })
   @Column({ name: 'target_rank', type: 'int', nullable: true })

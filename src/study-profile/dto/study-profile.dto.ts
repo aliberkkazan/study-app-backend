@@ -25,10 +25,15 @@ export class CreateStudyProfileDto {
   @IsISO8601()
   targetExamDate: string;
 
-  @ApiPropertyOptional({ example: 450 })
+  @ApiPropertyOptional({ example: 1450 })
   @IsOptional()
   @IsNumber()
   targetScore?: number;
+
+  @ApiPropertyOptional({ example: 1180, description: 'Baseline or current diagnostic score' })
+  @IsOptional()
+  @IsNumber()
+  currentScore?: number;
 
   @ApiPropertyOptional({ example: 10000 })
   @IsOptional()
@@ -88,6 +93,11 @@ export class UpdateStudyProfileDto {
   @IsOptional()
   @IsNumber()
   targetScore?: number;
+
+  @ApiPropertyOptional({ description: 'Baseline or current diagnostic score' })
+  @IsOptional()
+  @IsNumber()
+  currentScore?: number;
 
   @ApiPropertyOptional()
   @IsOptional()

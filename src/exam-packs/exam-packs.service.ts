@@ -8,7 +8,8 @@ import { ExamVersion } from './entities/exam-version.entity';
 import { ExamSection } from './entities/exam-section.entity';
 import { Subject } from './entities/subject.entity';
 import { Topic } from './entities/topic.entity';
-import { YKS_EXAM_PACK_DATA } from './seeds/yks-exam-pack.seed';
+import { YKS_EXAM_PACK_DATA, SeedCountry } from './seeds/yks-exam-pack.seed';
+import { SAT_EXAM_PACK_DATA } from './seeds/sat-exam-pack.seed';
 
 @Injectable()
 export class ExamPacksService implements OnModuleInit {
@@ -32,49 +33,62 @@ export class ExamPacksService implements OnModuleInit {
   ) {}
 
   async onModuleInit(): Promise<void> {
-    await this.seedYksPackIfMissing();
+    await this.seedAllPacksIfMissing();
+  }
+
+  async seedAllPacksIfMissing(): Promise<void> {
+    await this.seedExamPackIfMissing(YKS_EXAM_PACK_DATA);
+    await this.seedExamPackIfMissing(SAT_EXAM_PACK_DATA);
   }
 
   async seedYksPackIfMissing(): Promise<void> {
-    const existingExam = await this.examRepo.findOne({
-      where: { code: 'YKS' },
-    });
+    await this.seedExamPackIfMissing(YKS_EXAM_PACK_DATA);
+  }
 
-    if (existingExam) {
-      this.logger.log('Exam pack for YKS already initialized.');
-      return;
-    }
+  async seedSatPackIfMissing(): Promise<void> {
+    await this.seedExamPackIfMissing(SAT_EXAM_PACK_DATA);
+  }
 
-    this.logger.log('Seeding official YKS exam pack data...');
-
-    let country = await this.countryRepo.findOne({
-      where: { code: YKS_EXAM_PACK_DATA.code },
-    });
-    if (!country) {
-      country = this.countryRepo.create({
-        code: YKS_EXAM_PACK_DATA.code,
-        name: YKS_EXAM_PACK_DATA.name,
-        nativeName: YKS_EXAM_PACK_DATA.nativeName,
-        defaultTimezone: YKS_EXAM_PACK_DATA.defaultTimezone,
-      });
-      country = await this.countryRepo.save(country);
-    }
-
-    for (const eduSysData of YKS_EXAM_PACK_DATA.educationSystems) {
-      let eduSystem = await this.eduSystemRepo.findOne({
-        where: { code: eduSysData.code },
-      });
-      if (!eduSystem) {
-        eduSystem = this.eduSystemRepo.create({
-          code: eduSysData.code,
-          name: eduSysData.name,
-          nativeName: eduSysData.nativeName,
-          countryId: country.id,
-        });
-        eduSystem = await this.eduSystemRepo.save(eduSystem);
-      }
-
+  async seedExamPackIfMissing(packData: SeedCountry): Promise<void> {
+    for (const eduSysData of packData.educationSystems) {
       for (const examData of eduSysData.exams) {
+        const existingExam = await this.examRepo.findOne({
+          where: { code: examData.code },
+        });
+
+        if (existingExam) {
+          this.logger.log(`Exam pack for ${examData.code} already initialized.`);
+          continue;
+        }
+
+        this.logger.log(`Seeding official exam pack data for ${examData.code}...`);
+
+        let country = await this.countryRepo.findOne({
+          where: { code: packData.code },
+        });
+        if (!country) {
+          country = this.countryRepo.create({
+            code: packData.code,
+            name: packData.name,
+            nativeName: packData.nativeName,
+            defaultTimezone: packData.defaultTimezone,
+          });
+          country = await this.countryRepo.save(country);
+        }
+
+        let eduSystem = await this.eduSystemRepo.findOne({
+          where: { code: eduSysData.code },
+        });
+        if (!eduSystem) {
+          eduSystem = this.eduSystemRepo.create({
+            code: eduSysData.code,
+            name: eduSysData.name,
+            nativeName: eduSysData.nativeName,
+            countryId: country.id,
+          });
+          eduSystem = await this.eduSystemRepo.save(eduSystem);
+        }
+
         let exam = await this.examRepo.findOne({
           where: { code: examData.code },
         });
@@ -160,10 +174,10 @@ export class ExamPacksService implements OnModuleInit {
             }
           }
         }
+
+        this.logger.log(`Exam pack ${examData.code} seed completed successfully.`);
       }
     }
-
-    this.logger.log('YKS exam pack seed completed successfully.');
   }
 
   async getAllExamPacks(): Promise<Exam[]> {
@@ -272,6 +286,44 @@ export class ExamPacksService implements OnModuleInit {
 
     if (!currentVersion) {
       throw new NotFoundException('Current YKS Exam version not found.');
+    }
+
+    return currentVersion;
+  }
+
+  async getCurrentSatVersion(): Promise<ExamVersion> {
+    const exam = await this.examRepo.findOne({
+      where: { code: 'SAT' },
+    });
+
+    if (!exam) {
+      throw new NotFoundException('SAT Exam definition not found.');
+    }
+
+    const currentVersion = await this.examVersionRepo.findOne({
+      where: { examId: exam.id, isCurrent: true },
+      relations: {
+        sections: {
+          subjects: {
+            topics: true,
+          },
+        },
+      },
+      order: {
+        sections: {
+          orderIndex: 'ASC',
+          subjects: {
+            orderIndex: 'ASC',
+            topics: {
+              orderIndex: 'ASC',
+            },
+          },
+        },
+      },
+    });
+
+    if (!currentVersion) {
+      throw new NotFoundException('Current SAT Exam version not found.');
     }
 
     return currentVersion;
