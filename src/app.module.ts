@@ -12,6 +12,7 @@ import { StudySessionsModule } from './study-sessions/study-sessions.module';
 import { ExamPacksModule } from './exam-packs/exam-packs.module';
 import { StudyProfileModule } from './study-profile/study-profile.module';
 import { RoadmapModule } from './roadmap/roadmap.module';
+import { AccountabilityModule } from './accountability/accountability.module';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 
 @Module({
@@ -41,6 +42,7 @@ import { JwtAuthGuard } from './auth/jwt-auth.guard';
     ExamPacksModule,
     StudyProfileModule,
     RoadmapModule,
+    AccountabilityModule,
   ],
   controllers: [AppController],
   providers: [

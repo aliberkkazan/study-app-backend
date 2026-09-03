@@ -11,6 +11,12 @@ export enum StudySessionStatus {
   CANCELLED = 'CANCELLED',
 }
 
+export enum SessionVerificationStatus {
+  UNVERIFIED = 'UNVERIFIED',
+  VERIFIED = 'VERIFIED',
+  FLAGGED = 'FLAGGED',
+}
+
 @Entity('study_session')
 export class StudySession extends BaseEntity {
   @ApiProperty({ enum: StudySessionStatus })
@@ -20,6 +26,27 @@ export class StudySession extends BaseEntity {
     default: StudySessionStatus.ACTIVE,
   })
   status: StudySessionStatus;
+
+  @ApiProperty({ enum: SessionVerificationStatus, default: SessionVerificationStatus.UNVERIFIED })
+  @Column({
+    name: 'verification_status',
+    type: 'enum',
+    enum: SessionVerificationStatus,
+    default: SessionVerificationStatus.UNVERIFIED,
+  })
+  verificationStatus: SessionVerificationStatus;
+
+  @ApiProperty({ type: () => User, required: false })
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'verified_by' })
+  verifiedBy?: User;
+
+  @Column({ name: 'verified_by', nullable: true })
+  verifiedById?: string;
+
+  @ApiProperty({ example: 'Great focus on difficult problem sets!', required: false })
+  @Column({ name: 'mentor_feedback', type: 'text', nullable: true })
+  mentorFeedback?: string;
 
   @ApiProperty()
   @Column({ name: 'start_time', type: 'timestamp' })
