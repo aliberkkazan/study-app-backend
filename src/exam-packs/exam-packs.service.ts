@@ -180,18 +180,19 @@ export class ExamPacksService implements OnModuleInit {
     }
   }
 
-  async getAllExamPacks(): Promise<Exam[]> {
-    return this.examRepo.find({
-      relations: {
-        educationSystem: {
-          country: true,
-        },
-        versions: true,
-      },
-      order: {
-        code: 'ASC',
-      },
-    });
+  async getAllExamPacks(countryCode?: string): Promise<Exam[]> {
+    const query = this.examRepo
+      .createQueryBuilder('exam')
+      .leftJoinAndSelect('exam.educationSystem', 'educationSystem')
+      .leftJoinAndSelect('educationSystem.country', 'country')
+      .leftJoinAndSelect('exam.versions', 'versions')
+      .orderBy('exam.code', 'ASC');
+
+    if (countryCode) {
+      query.where('LOWER(country.code) = LOWER(:countryCode)', { countryCode });
+    }
+
+    return query.getMany();
   }
 
   async getExamById(id: string): Promise<Exam> {

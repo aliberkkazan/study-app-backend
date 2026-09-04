@@ -1,5 +1,5 @@
-import { Controller, Get, Param } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { Controller, Get, Param, Query } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { ExamPacksService } from './exam-packs.service';
 import { Public } from '../auth/public-route.decorator';
 import { Exam } from './entities/exam.entity';
@@ -12,10 +12,16 @@ export class ExamPacksController {
 
   @Public()
   @Get()
-  @ApiOperation({ summary: 'List all available exams and versions' })
+  @ApiOperation({ summary: 'List all available exams and versions, optionally filtered by country' })
+  @ApiQuery({
+    name: 'countryCode',
+    required: false,
+    description: 'Filter exams by ISO country code (e.g. TR, US)',
+    example: 'US',
+  })
   @ApiResponse({ status: 200, description: 'List of exams with country and versions', type: [Exam] })
-  async getAllExamPacks(): Promise<Exam[]> {
-    return this.examPacksService.getAllExamPacks();
+  async getAllExamPacks(@Query('countryCode') countryCode?: string): Promise<Exam[]> {
+    return this.examPacksService.getAllExamPacks(countryCode);
   }
 
   @Public()

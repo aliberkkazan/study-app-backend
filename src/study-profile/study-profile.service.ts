@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { StudyProfile } from './entities/study-profile.entity';
+import { StudyProfile, StudyTrack } from './entities/study-profile.entity';
 import { DiagnosticResult } from './entities/diagnostic-result.entity';
 import { CreateStudyProfileDto, UpdateStudyProfileDto } from './dto/study-profile.dto';
 import { CreateDiagnosticResultDto } from './dto/diagnostic-result.dto';
@@ -16,7 +16,7 @@ export class StudyProfileService {
   ) {}
 
   async getProfile(userId: string): Promise<StudyProfile> {
-    const profile = await this.profileRepo.findOne({
+    let profile = await this.profileRepo.findOne({
       where: { userId },
       relations: {
         targetExamVersion: {
@@ -26,7 +26,20 @@ export class StudyProfileService {
     });
 
     if (!profile) {
-      throw new NotFoundException('Study profile not found for user.');
+      const defaultDate = new Date();
+      defaultDate.setFullYear(defaultDate.getFullYear() + 1);
+      defaultDate.setMonth(5);
+      defaultDate.setDate(20);
+
+      profile = this.profileRepo.create({
+        userId,
+        track: StudyTrack.SAYISAL,
+        targetExamDate: defaultDate,
+        targetRank: 10000,
+        weeklyAvailabilityMinutes: 1200,
+        timezone: "Europe/Istanbul",
+      });
+      profile = await this.profileRepo.save(profile);
     }
 
     return profile;

@@ -13,9 +13,10 @@ import { ReportTimeframe } from '../entities/share-token.entity';
 import { SessionVerificationStatus } from '../../study-sessions/entities/study-session.entity';
 
 export class CreateInviteDto {
-  @ApiProperty({ enum: AccessScope, default: AccessScope.MENTOR })
+  @ApiPropertyOptional({ enum: AccessScope, default: AccessScope.PARTNER })
+  @IsOptional()
   @IsEnum(AccessScope)
-  scope: AccessScope;
+  scope?: AccessScope;
 
   @ApiPropertyOptional({ example: 'mentor@example.com' })
   @IsOptional()
@@ -41,10 +42,15 @@ export class CreateInviteDto {
 }
 
 export class AcceptInviteDto {
-  @ApiProperty({ example: 'AG-98F12A', description: 'Invite code provided by the student' })
-  @IsNotEmpty()
+  @ApiPropertyOptional({ example: 'AG-98F12A', description: 'Invite code provided by the student' })
+  @IsOptional()
   @IsString()
-  inviteCode: string;
+  inviteCode?: string;
+
+  @ApiPropertyOptional({ description: 'Grant ID to accept directly' })
+  @IsOptional()
+  @IsString()
+  grantId?: string;
 }
 
 export class CreateShareTokenDto {

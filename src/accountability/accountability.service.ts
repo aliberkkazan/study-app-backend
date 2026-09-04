@@ -6,7 +6,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, MoreThan } from 'typeorm';
+import { Repository, MoreThan, In, ILike } from 'typeorm';
 import { randomBytes } from 'crypto';
 import {
   AccessGrant,
@@ -59,13 +59,53 @@ export class AccountabilityService {
   // Access Grants & Permissions
   // ----------------------------------------------------
 
-  async createInvite(granter: User, dto: CreateInviteDto): Promise<AccessGrant> {
-    const inviteCode = `AG-${randomBytes(3).toString('hex').toUpperCase()}`;
+  async createInvite(granter: User, dto: CreateInviteDto): Promise<any> {
+    const scope = dto.scope || AccessScope.PARTNER;
+    const inviteEmail = dto.inviteEmail?.trim().toLowerCase();
+
+    let targetUser: User | null = null;
+
+    if (inviteEmail) {
+      if (granter.email && inviteEmail === granter.email.trim().toLowerCase()) {
+        throw new BadRequestException("Kendinize partnerlik daveti gönderemezsiniz.");
+      }
+
+      targetUser = await this.userRepo.findOne({
+        where: { email: ILike(inviteEmail) },
+      });
+
+      if (targetUser) {
+        const existingGrant = await this.grantRepo.findOne({
+          where: [
+            {
+              granterId: granter.id,
+              granteeId: targetUser.id,
+              status: In([AccessGrantStatus.ACTIVE, AccessGrantStatus.INVITED]),
+            },
+            {
+              granterId: targetUser.id,
+              granteeId: granter.id,
+              status: In([AccessGrantStatus.ACTIVE, AccessGrantStatus.INVITED]),
+            },
+          ],
+        });
+
+        if (existingGrant) {
+          throw new BadRequestException(
+            existingGrant.status === AccessGrantStatus.ACTIVE
+              ? "Bu kullanıcı ile zaten aktif bir partnerliğiniz var."
+              : "Bu kullanıcı ile zaten bekleyen bir davetiniz var.",
+          );
+        }
+      }
+    }
+
+    const inviteCode = "AG-" + randomBytes(3).toString("hex").toUpperCase();
 
     const defaultPermissions: GrantPermissions = {
-      canAssignTasks: dto.scope === AccessScope.MENTOR || dto.scope === AccessScope.INSTITUTION,
+      canAssignTasks: scope === AccessScope.MENTOR || scope === AccessScope.INSTITUTION,
       canViewResults: true,
-      canVerifySessions: dto.scope === AccessScope.MENTOR || dto.scope === AccessScope.INSTITUTION,
+      canVerifySessions: scope === AccessScope.MENTOR || scope === AccessScope.INSTITUTION,
       canGiveFeedback: true,
       ...(dto.permissions || {}),
     };
@@ -73,61 +113,134 @@ export class AccountabilityService {
     const grant = this.grantRepo.create({
       granterId: granter.id,
       granter,
-      scope: dto.scope,
+      granteeId: targetUser ? targetUser.id : undefined,
+      grantee: targetUser || undefined,
+      scope,
       status: AccessGrantStatus.INVITED,
       inviteCode,
-      inviteEmail: dto.inviteEmail,
+      inviteEmail: inviteEmail || undefined,
       permissions: defaultPermissions,
       expiresAt: dto.expiresAt ? new Date(dto.expiresAt) : undefined,
     });
 
-    return this.grantRepo.save(grant);
+    const savedGrant = await this.grantRepo.save(grant);
+
+    return {
+      ...savedGrant,
+      userExists: !!targetUser,
+      targetUser: targetUser
+        ? { id: targetUser.id, name: targetUser.name, email: targetUser.email }
+        : null,
+    };
   }
 
   async acceptInvite(grantee: User, dto: AcceptInviteDto): Promise<AccessGrant> {
-    const grant = await this.grantRepo.findOne({
-      where: { inviteCode: dto.inviteCode },
-      relations: { granter: true },
-    });
+    let grant: AccessGrant | null = null;
+
+    if (dto.grantId) {
+      grant = await this.grantRepo.findOne({
+        where: { id: dto.grantId },
+        relations: { granter: true, grantee: true },
+      });
+    } else if (dto.inviteCode) {
+      grant = await this.grantRepo.findOne({
+        where: { inviteCode: dto.inviteCode.trim().toUpperCase() },
+        relations: { granter: true, grantee: true },
+      });
+    } else {
+      throw new BadRequestException("Lütfen davet kodunu veya davet kimliğini belirtin.");
+    }
 
     if (!grant) {
-      throw new NotFoundException('Invalid or expired access invite code.');
+      throw new NotFoundException("Geçersiz veya süresi dolmuş davet kodu.");
     }
 
     if (grant.granterId === grantee.id) {
-      throw new BadRequestException('You cannot accept your own invite.');
+      throw new BadRequestException("Kendi davetinizi kabul edemezsiniz.");
     }
 
     if (grant.status !== AccessGrantStatus.INVITED) {
-      throw new BadRequestException(`Invite is already ${grant.status.toLowerCase()}.`);
+      throw new BadRequestException("Bu davet zaten " + grant.status.toLowerCase() + " durumunda.");
     }
 
     if (grant.expiresAt && grant.expiresAt < new Date()) {
       grant.status = AccessGrantStatus.EXPIRED;
       await this.grantRepo.save(grant);
-      throw new BadRequestException('Invite code has expired.');
+      throw new BadRequestException("Davetin süresi dolmuş.");
     }
 
     grant.grantee = grantee;
     grant.granteeId = grantee.id;
     grant.status = AccessGrantStatus.ACTIVE;
 
-    return this.grantRepo.save(grant);
+    const saved = await this.grantRepo.save(grant);
+
+    if (grant.scope === AccessScope.PARTNER) {
+      const reciprocal = await this.grantRepo.findOne({
+        where: {
+          granterId: grantee.id,
+          granteeId: grant.granterId,
+          status: AccessGrantStatus.ACTIVE,
+        },
+      });
+
+      if (!reciprocal) {
+        const reciprocalGrant = this.grantRepo.create({
+          granterId: grantee.id,
+          granter: grantee,
+          granteeId: grant.granterId,
+          grantee: grant.granter,
+          scope: AccessScope.PARTNER,
+          status: AccessGrantStatus.ACTIVE,
+          inviteCode: "AG-" + randomBytes(3).toString("hex").toUpperCase(),
+          permissions: grant.permissions,
+        });
+        await this.grantRepo.save(reciprocalGrant);
+      }
+    }
+
+    return saved;
   }
 
   async getGrantedAccessList(userId: string): Promise<AccessGrant[]> {
     return this.grantRepo.find({
       where: { granterId: userId },
       relations: { grantee: true },
-      order: { created_at: 'DESC' },
+      order: { created_at: "DESC" },
     });
   }
 
-  async getReceivedAccessList(userId: string): Promise<AccessGrant[]> {
+  async getReceivedAccessList(user: User): Promise<AccessGrant[]> {
+    if (user.email) {
+      await this.grantRepo
+        .createQueryBuilder()
+        .update(AccessGrant)
+        .set({ granteeId: user.id })
+        .where("LOWER(invite_email) = LOWER(:email) AND grantee_id IS NULL AND status = :status", {
+          email: user.email.trim(),
+          status: AccessGrantStatus.INVITED,
+        })
+        .execute();
+    }
+
+    const whereConditions: any[] = [
+      {
+        granteeId: user.id,
+        status: In([AccessGrantStatus.ACTIVE, AccessGrantStatus.INVITED]),
+      },
+    ];
+
+    if (user.email) {
+      whereConditions.push({
+        inviteEmail: ILike(user.email.trim()),
+        status: In([AccessGrantStatus.ACTIVE, AccessGrantStatus.INVITED]),
+      });
+    }
+
     return this.grantRepo.find({
-      where: { granteeId: userId, status: AccessGrantStatus.ACTIVE },
+      where: whereConditions,
       relations: { granter: true },
-      order: { created_at: 'DESC' },
+      order: { created_at: "DESC" },
     });
   }
 
@@ -137,11 +250,18 @@ export class AccountabilityService {
     });
 
     if (!grant) {
-      throw new NotFoundException('Access grant not found.');
+      throw new NotFoundException("Erişim yetkisi bulunamadı.");
     }
 
-    if (grant.granterId !== user.id && grant.granteeId !== user.id) {
-      throw new ForbiddenException('You do not have permission to revoke this grant.');
+    const isGranter = grant.granterId === user.id;
+    const isGrantee =
+      grant.granteeId === user.id ||
+      (grant.inviteEmail &&
+        user.email &&
+        grant.inviteEmail.trim().toLowerCase() === user.email.trim().toLowerCase());
+
+    if (!isGranter && !isGrantee) {
+      throw new ForbiddenException("Bu daveti veya yetkiyi kaldırma izniniz yok.");
     }
 
     grant.status = AccessGrantStatus.REVOKED;

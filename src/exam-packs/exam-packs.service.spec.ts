@@ -12,14 +12,23 @@ import { Topic } from './entities/topic.entity';
 describe('ExamPacksService', () => {
   let service: ExamPacksService;
 
+  const mockQueryBuilder = {
+    leftJoinAndSelect: jest.fn().mockReturnThis(),
+    orderBy: jest.fn().mockReturnThis(),
+    where: jest.fn().mockReturnThis(),
+    getMany: jest.fn(),
+  };
+
   const mockRepo = {
     find: jest.fn(),
     findOne: jest.fn(),
     create: jest.fn((dto) => ({ id: 'mock-uuid', ...dto })),
     save: jest.fn((entity) => Promise.resolve({ id: 'mock-uuid', ...entity })),
+    createQueryBuilder: jest.fn(() => mockQueryBuilder),
   };
 
   beforeEach(async () => {
+    jest.clearAllMocks();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ExamPacksService,
@@ -40,11 +49,24 @@ describe('ExamPacksService', () => {
     expect(service).toBeDefined();
   });
 
-  it('should get all exam packs', async () => {
-    const mockExams = [{ id: '1', code: 'YKS' }];
-    mockRepo.find.mockResolvedValueOnce(mockExams);
+  it('should get all exam packs without filter', async () => {
+    const mockExams = [{ id: '1', code: 'YKS' }, { id: '2', code: 'SAT' }];
+    mockQueryBuilder.getMany.mockResolvedValueOnce(mockExams);
 
     const result = await service.getAllExamPacks();
     expect(result).toEqual(mockExams);
+    expect(mockQueryBuilder.where).not.toHaveBeenCalled();
+  });
+
+  it('should get exam packs filtered by countryCode', async () => {
+    const mockExams = [{ id: '2', code: 'SAT' }];
+    mockQueryBuilder.getMany.mockResolvedValueOnce(mockExams);
+
+    const result = await service.getAllExamPacks('US');
+    expect(result).toEqual(mockExams);
+    expect(mockQueryBuilder.where).toHaveBeenCalledWith(
+      'LOWER(country.code) = LOWER(:countryCode)',
+      { countryCode: 'US' },
+    );
   });
 });

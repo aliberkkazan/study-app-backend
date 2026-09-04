@@ -1,7 +1,9 @@
 import { Controller, Get } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AppService } from './app.service';
 import { Public } from './auth/public-route.decorator';
+import { CurrentUser } from './common/decorators/current-user.decorator';
+import { User } from './users/entities/user.entity';
 
 @ApiTags('health')
 @Controller()
@@ -20,5 +22,12 @@ export class AppController {
   @ApiOperation({ summary: 'Health check endpoint' })
   healthCheck() {
     return this.appService.healthCheck();
+  }
+
+  @Get('me')
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Get current authenticated user profile' })
+  getMe(@CurrentUser() user: User) {
+    return user;
   }
 }

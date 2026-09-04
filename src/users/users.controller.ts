@@ -26,6 +26,11 @@ export class UsersController {
     return user;
   }
 
+  @Get('me')
+  getMe(@CurrentUser() user: User) {
+    return user;
+  }
+
   @Post('request')
   async createRequest(@CurrentUser() user: User, @Body('code') code: string) {
     return this.usersService.createRequest(user.id, code);

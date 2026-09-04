@@ -57,7 +57,7 @@ export class AccountabilityController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get list of students/users who granted access to me' })
   async getReceivedAccessList(@CurrentUser() user: User) {
-    return this.accountabilityService.getReceivedAccessList(user.id);
+    return this.accountabilityService.getReceivedAccessList(user);
   }
 
   @Delete('grants/:id/revoke')
