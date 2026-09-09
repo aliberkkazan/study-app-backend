@@ -6,6 +6,7 @@ import { StudyResult } from './entities/study-result.entity';
 import { Task } from '../tasks/entities/task.entity';
 import { StartSessionDto } from './dto/start-session.dto';
 import { FinishSessionDto } from './dto/finish-session.dto';
+import { RecordSessionDto } from './dto/record-session.dto';
 import { GetProgressQueryDto, ProgressResponseDto, ProgressTimeframe, SubjectProgressDto, DailyProgressDto } from './dto/progress.dto';
 import { User } from '../users/entities/user.entity';
 import { TasksService } from '../tasks/tasks.service';
@@ -82,6 +83,58 @@ export class StudySessionsService {
     session.actualDuration = finishSessionDto.actualDuration;
     session.idempotencyKey = finishSessionDto.idempotencyKey;
     session.result = result;
+
+    return this.studySessionRepository.save(session);
+  }
+
+  async record(user: User, dto: RecordSessionDto): Promise<StudySession> {
+    const duration = dto.actualDuration ?? dto.durationMinutes ?? 0;
+    const correctCount = dto.correctCount ?? 0;
+    const wrongCount = dto.wrongCount ?? dto.incorrectCount ?? 0;
+
+    let task: Task | undefined;
+    if (dto.taskId) {
+      try {
+        task = await this.tasksService.findOne(dto.taskId, user.id);
+        if (task && dto.markTaskCompleted) {
+          task.completed = true;
+          await this.taskRepository.save(task);
+        }
+      } catch (err) {
+        // task may not exist or not found
+      }
+    } else if (dto.courseName || dto.taskTitle) {
+      task = this.taskRepository.create({
+        title: dto.taskTitle || (dto.courseName ? `${dto.courseName} Study` : 'Study Session'),
+        subject: dto.courseName || 'General',
+        topic: dto.topicName,
+        completed: true,
+        owner: user,
+      });
+      await this.taskRepository.save(task);
+    }
+
+    const result = this.studyResultRepository.create({
+      correctCount,
+      wrongCount,
+      notes: dto.notes,
+      focusQuality: dto.focusQuality,
+    });
+
+    const startTime = dto.startedAt ? new Date(dto.startedAt) : new Date(Date.now() - duration * 60000);
+    const endTime = dto.endedAt ? new Date(dto.endedAt) : new Date();
+
+    const session = this.studySessionRepository.create({
+      user,
+      task,
+      startTime,
+      endTime,
+      targetDuration: duration,
+      actualDuration: duration,
+      status: StudySessionStatus.FINISHED,
+      idempotencyKey: dto.idempotencyKey || `rec-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
+      result,
+    });
 
     return this.studySessionRepository.save(session);
   }

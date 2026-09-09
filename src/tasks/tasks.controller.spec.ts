@@ -49,8 +49,8 @@ describe('TasksController', () => {
     expect(controller).toBeDefined();
   });
 
-  it('should call findAll with user id', async () => {
-    await controller.findAll(mockUser, 'today', 'Math');
-    expect(service.findAll).toHaveBeenCalledWith(mockUser.id, 'today', 'Math');
+  it('should call findAll with user', async () => {
+    await controller.findAll(mockUser, 'student-1', 'today', 'Math');
+    expect(service.findAll).toHaveBeenCalledWith(mockUser, 'student-1', 'today', 'Math');
   });
 });

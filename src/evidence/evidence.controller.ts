@@ -5,7 +5,7 @@ import { CreateEvidenceDto } from './dto/create-evidence.dto';
 import { UpdateEvidenceDto } from './dto/update-evidence.dto';
 
 @ApiBearerAuth('JWT-auth')
-@Controller('evidence')
+@Controller(['evidence', 'submissions'])
 export class EvidenceController {
   constructor(private readonly evidenceService: EvidenceService) {}
 

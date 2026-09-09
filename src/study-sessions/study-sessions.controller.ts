@@ -3,6 +3,7 @@ import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagg
 import { StudySessionsService } from './study-sessions.service';
 import { StartSessionDto } from './dto/start-session.dto';
 import { FinishSessionDto } from './dto/finish-session.dto';
+import { RecordSessionDto } from './dto/record-session.dto';
 import { GetProgressQueryDto, ProgressResponseDto } from './dto/progress.dto';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { User } from '../users/entities/user.entity';
@@ -11,9 +12,21 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 @ApiTags('Study Sessions & Progress')
 @ApiBearerAuth('JWT-auth')
 @UseGuards(JwtAuthGuard)
-@Controller('study-sessions')
+@Controller(['study-sessions', 'sessions'])
 export class StudySessionsController {
   constructor(private readonly studySessionsService: StudySessionsService) {}
+
+  @Post()
+  @ApiOperation({ summary: 'Directly record a completed study session' })
+  record(@CurrentUser() user: User, @Body() recordSessionDto: RecordSessionDto) {
+    return this.studySessionsService.record(user, recordSessionDto);
+  }
+
+  @Post('record')
+  @ApiOperation({ summary: 'Directly record a completed study session (alias)' })
+  recordAlias(@CurrentUser() user: User, @Body() recordSessionDto: RecordSessionDto) {
+    return this.studySessionsService.record(user, recordSessionDto);
+  }
 
   @Post('start')
   start(@CurrentUser() user: User, @Body() startSessionDto: StartSessionDto) {

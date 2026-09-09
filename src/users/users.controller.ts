@@ -31,6 +31,11 @@ export class UsersController {
     return user;
   }
 
+  @Post('switch-role')
+  async switchRole(@CurrentUser() user: User) {
+    return this.usersService.switchRole(user.id);
+  }
+
   @Post('request')
   async createRequest(@CurrentUser() user: User, @Body('code') code: string) {
     return this.usersService.createRequest(user.id, code);

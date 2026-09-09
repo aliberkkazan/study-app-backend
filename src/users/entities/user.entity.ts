@@ -39,6 +39,10 @@ export class User extends BaseEntity {
   })
   role: UserRole;
 
+  @ApiProperty({ example: false, default: false })
+  @Column({ name: 'has_switched_role', type: 'boolean', default: false })
+  hasSwitchedRole: boolean;
+
   @ManyToMany(() => User, (user) => user.mentors)
   @JoinTable({
     name: 'user_students',

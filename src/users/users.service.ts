@@ -45,7 +45,12 @@ export class UsersService {
   }
 
   async findOne(id: string): Promise<User | null> {
-    return this.usersRepository.findOne({ where: { id }, relations: ['mentors'] });
+    const user = await this.usersRepository.findOne({ where: { id }, relations: ['mentors', 'students'] });
+    if (user && user.role === UserRole.MENTOR && !user.mentorCode) {
+      user.mentorCode = this.generateMentorCode();
+      await this.usersRepository.save(user);
+    }
+    return user;
   }
 
   async findAll(role?: string, mentorId?: string) {
@@ -82,8 +87,49 @@ export class UsersService {
     return mentor;
   }
 
-  update(id: string, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  async switchRole(userId: string): Promise<User> {
+    const user = await this.usersRepository.findOne({ where: { id: userId }, relations: ['mentors', 'students'] });
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+
+    if (user.hasSwitchedRole) {
+      throw new BadRequestException('Role switch privilege has already been used');
+    }
+
+    const nextRole = user.role === UserRole.MENTOR ? UserRole.STUDENT : UserRole.MENTOR;
+    user.role = nextRole;
+    user.hasSwitchedRole = true;
+
+    if (nextRole === UserRole.MENTOR && !user.mentorCode) {
+      user.mentorCode = this.generateMentorCode();
+    }
+
+    return this.usersRepository.save(user);
+  }
+
+  async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+    const user = await this.usersRepository.findOne({ where: { id }, relations: ['mentors', 'students'] });
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+
+    if (updateUserDto.role && updateUserDto.role !== user.role && user.hasSwitchedRole) {
+      throw new BadRequestException('Role switch privilege has already been used');
+    }
+
+    if (updateUserDto.role === UserRole.MENTOR && !user.mentorCode) {
+      user.mentorCode = this.generateMentorCode();
+    }
+
+    if (updateUserDto.password) {
+      const salt = await bcrypt.genSalt();
+      user.password = await bcrypt.hash(updateUserDto.password, salt);
+      delete (updateUserDto as any).password;
+    }
+
+    Object.assign(user, updateUserDto);
+    return this.usersRepository.save(user);
   }
 
   async remove(id: string): Promise<void> {

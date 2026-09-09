@@ -13,7 +13,16 @@ export class TasksService {
     private tasksRepository: Repository<Task>,
   ) {}
 
-  create(owner: User, createTaskDto: CreateTaskDto) {
+  async create(creator: User, createTaskDto: CreateTaskDto) {
+    // If studentId is provided, the creator is assigning a task to that student
+    const isAssigningToStudent = !!createTaskDto.studentId;
+    const owner = isAssigningToStudent ? ({ id: createTaskDto.studentId } as User) : creator;
+    const assignedBy = isAssigningToStudent
+      ? creator
+      : createTaskDto.assignedBy
+      ? ({ id: createTaskDto.assignedBy } as User)
+      : undefined;
+
     const task = this.tasksRepository.create({
       title: createTaskDto.title,
       description: createTaskDto.description,
@@ -24,17 +33,35 @@ export class TasksService {
       dueDate: createTaskDto.dueDate ? new Date(createTaskDto.dueDate) : undefined,
       scheduledDate: createTaskDto.scheduledDate ? new Date(createTaskDto.scheduledDate) : undefined,
       owner,
-      assignedBy: createTaskDto.assignedBy ? ({ id: createTaskDto.assignedBy } as User) : undefined,
+      assignedBy,
     });
-    return this.tasksRepository.save(task);
+    const saved = await this.tasksRepository.save(task);
+    const populated = await this.tasksRepository.findOne({
+      where: { id: saved.id },
+      relations: ['owner', 'assignedBy'],
+    });
+    return populated || saved;
   }
 
-  findAll(ownerId: string, status?: 'today' | 'upcoming' | 'flexible', subject?: string) {
+  findAll(user: User, studentId?: string, status?: 'today' | 'upcoming' | 'flexible', subject?: string) {
     const query = this.tasksRepository.createQueryBuilder('task')
       .leftJoinAndSelect('task.owner', 'owner')
       .leftJoinAndSelect('task.assignedBy', 'assignedBy')
-      .where('task.owner_id = :ownerId', { ownerId })
-      .andWhere('task.deleted_at IS NULL');
+      .where('task.deleted_at IS NULL');
+
+    if (user.role === 'mentor') {
+      // Mentor can strictly and ONLY see tasks that THEY assigned
+      query.andWhere('assignedBy.id = :userId', { userId: user.id });
+      if (studentId) {
+        query.andWhere('owner.id = :studentId', { studentId });
+      }
+    } else if (user.role === 'admin') {
+      if (studentId) {
+        query.andWhere('owner.id = :studentId', { studentId });
+      }
+    } else {
+      query.andWhere('owner.id = :userId', { userId: user.id });
+    }
 
     if (subject) {
       query.andWhere('task.subject = :subject', { subject });
@@ -66,7 +93,10 @@ export class TasksService {
     return query.getMany();
   }
 
-  async findOne(id: string, ownerId: string) {
+  async findOne(id: string, user: User | string) {
+    const userId = typeof user === 'string' ? user : user.id;
+    const userRole = typeof user === 'string' ? undefined : user.role;
+
     const task = await this.tasksRepository.findOne({
       where: { id },
       relations: ['owner', 'assignedBy'],
@@ -76,35 +106,43 @@ export class TasksService {
       throw new NotFoundException('Task not found');
     }
 
-    const isOwner = task.owner.id === ownerId;
-    const isAssignee = task.assignedBy && task.assignedBy.id === ownerId;
+    const isOwner = task.owner?.id === userId;
+    const isAssigner = task.assignedBy && task.assignedBy?.id === userId;
 
-    if (!isOwner && !isAssignee) {
+    // Mentors can strictly ONLY access tasks that they assigned
+    if (userRole === 'mentor' && !isAssigner) {
+      throw new ForbiddenException('Mentor can only access tasks that they assigned');
+    }
+
+    if (!isOwner && !isAssigner && userRole !== 'admin') {
       throw new ForbiddenException('You do not have permission to access this task');
     }
 
     return task;
   }
 
-  async update(id: string, ownerId: string, updateTaskDto: UpdateTaskDto) {
-    await this.findOne(id, ownerId); // Validates ownership
+  async update(id: string, user: User, updateTaskDto: UpdateTaskDto) {
+    await this.findOne(id, user.id); // Validates permission
 
     const { assignedBy, dueDate, scheduledDate, ...rest } = updateTaskDto;
 
-    await this.tasksRepository.update(id, {
-      ...rest,
-      ...(dueDate !== undefined ? { dueDate: new Date(dueDate) } : {}),
-      ...(scheduledDate !== undefined ? { scheduledDate: new Date(scheduledDate) } : {}),
-      ...(assignedBy !== undefined ? { assignedBy: ({ id: assignedBy } as User) } : {}),
-    });
-    return this.findOne(id, ownerId);
+    const updateData: any = { ...rest };
+    if (dueDate !== undefined) updateData.dueDate = dueDate ? new Date(dueDate) : null;
+    if (scheduledDate !== undefined) updateData.scheduledDate = scheduledDate ? new Date(scheduledDate) : null;
+    if (assignedBy !== undefined) updateData.assignedBy = assignedBy ? ({ id: assignedBy } as User) : null;
+
+    await this.tasksRepository.update(id, updateData);
+    return this.findOne(id, user.id);
   }
 
-  async remove(id: string, ownerId: string) {
-    const task = await this.findOne(id, ownerId);
+  async remove(id: string, user: User) {
+    const task = await this.findOne(id, user.id);
 
-    if (task.owner.id !== ownerId) {
-      throw new ForbiddenException('Only the owner can delete this task');
+    const isOwner = task.owner?.id === user.id;
+    const isAssigner = task.assignedBy && task.assignedBy?.id === user.id;
+
+    if (!isOwner && !isAssigner) {
+      throw new ForbiddenException('You do not have permission to delete this task');
     }
 
     await this.tasksRepository.softDelete(id);

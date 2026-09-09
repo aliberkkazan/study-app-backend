@@ -46,4 +46,9 @@ export class CreateTaskDto {
   @IsOptional()
   @IsUUID()
   assignedBy?: string;
+
+  @ApiProperty({ example: 'student-uuid-v4', required: false })
+  @IsOptional()
+  @IsUUID()
+  studentId?: string;
 }
