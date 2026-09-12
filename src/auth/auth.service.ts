@@ -47,11 +47,12 @@ export class AuthService {
       tokenType: 'refresh',
     };
 
+    const accessExpiresIn = (process.env.JWT_ACCESS_EXPIRES_IN || '7d') as any;
     const access_token = this.jwtService.sign(accessPayload, {
-      expiresIn: '15m',
+      expiresIn: accessExpiresIn,
     });
     const refresh_token = this.jwtService.sign(refreshPayload, {
-      expiresIn: '7d',
+      expiresIn: '30d',
     });
 
     // Hash and store refresh token

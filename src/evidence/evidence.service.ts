@@ -70,15 +70,9 @@ export class EvidenceService {
         throw new NotFoundException('Student not found');
       }
 
-      const slug = student.name
-        .trim()
-        .toLowerCase()
-        .replace(/ /g, '-')
-        .replace(/[^\w-]+/g, '');
-
       imageUrl = await this.filesService.uploadBase64File(
         base64Data,
-        `students/${slug}/evidence`,
+        `students/${student.id}/evidence`,
       );
     }
 

@@ -178,6 +178,29 @@ describe('Security & Negative Authorization Tests', () => {
         } as any),
       ).rejects.toThrow(ForbiddenException);
     });
+
+    it('should strip studentId from update data to prevent SQL column error', async () => {
+      const studentTask: Task = {
+        id: 'task-student-1',
+        title: 'Original Title',
+        owner: userA,
+        active: true,
+        created_at: new Date(),
+        updated_at: new Date(),
+      } as any;
+
+      mockTaskRepo.findOne.mockResolvedValue(studentTask);
+
+      await tasksService.update('task-student-1', userA, {
+        title: 'Updated Title',
+        studentId: userB.id,
+      } as any);
+
+      expect(mockTaskRepo.update).toHaveBeenCalledWith(
+        'task-student-1',
+        expect.not.objectContaining({ studentId: expect.anything() }),
+      );
+    });
   });
 
   describe('3. Evidence Ownership & Review Protection', () => {

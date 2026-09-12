@@ -635,7 +635,7 @@ export class AccountabilityService {
 
         return {
           userId: m.userId,
-          name: m.user.name || 'Student',
+          name: m.user?.name || 'Student',
           role: m.role,
           totalMinutes,
           activeDaysCount,

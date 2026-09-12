@@ -196,7 +196,8 @@ export class TasksService {
       }
     }
 
-    const { assignedBy, dueDate, scheduledDate, ...rest } = updateTaskDto;
+    const { assignedBy, dueDate, scheduledDate, studentId, ...rest } =
+      updateTaskDto;
 
     const updateData: Record<string, unknown> = { ...rest };
     if (dueDate !== undefined)

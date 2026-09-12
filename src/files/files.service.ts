@@ -19,8 +19,9 @@ export class FilesService {
       this.configService.get<string>('SUPABASE_ANON_KEY');
 
     this.privateBucket =
+      this.configService.get<string>('SUPABASE_BUCKET') ||
       this.configService.get<string>('SUPABASE_PRIVATE_BUCKET') ||
-      'studyapp-private-evidence';
+      'studyapp-assets';
 
     if (supabaseUrl && supabaseKey) {
       this.supabase = createClient(supabaseUrl, supabaseKey);
@@ -46,7 +47,7 @@ export class FilesService {
 
     if (!this.supabase) {
       // Mock for test/local without Supabase
-      return `https://mock-storage.internal/${this.privateBucket}/${filePath}?token=mock-signed`;
+      return `https://mock-storage.internal/${this.privateBucket}/${filePath}`;
     }
 
     const { error } = await this.supabase.storage
@@ -61,7 +62,15 @@ export class FilesService {
       throw new BadRequestException(`Upload failed: ${error.message}`);
     }
 
-    return this.createSignedUrl(filePath, 3600);
+    if (this.configService.get<string>('USE_SIGNED_URLS') === 'true') {
+      return this.createSignedUrl(filePath, 3600);
+    }
+
+    const { data: publicData } = this.supabase.storage
+      .from(this.privateBucket)
+      .getPublicUrl(filePath);
+
+    return publicData.publicUrl;
   }
 
   async uploadBase64File(
@@ -96,7 +105,7 @@ export class FilesService {
     const filePath = `${sanitizedFolder}/${fileName}`;
 
     if (!this.supabase) {
-      return `https://mock-storage.internal/${this.privateBucket}/${filePath}?token=mock-signed`;
+      return `https://mock-storage.internal/${this.privateBucket}/${filePath}`;
     }
 
     const { error } = await this.supabase.storage
@@ -111,7 +120,15 @@ export class FilesService {
       throw new BadRequestException(`Upload failed: ${error.message}`);
     }
 
-    return this.createSignedUrl(filePath, 3600);
+    if (this.configService.get<string>('USE_SIGNED_URLS') === 'true') {
+      return this.createSignedUrl(filePath, 3600);
+    }
+
+    const { data: publicData } = this.supabase.storage
+      .from(this.privateBucket)
+      .getPublicUrl(filePath);
+
+    return publicData.publicUrl;
   }
 
   async createSignedUrl(

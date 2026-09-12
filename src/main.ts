@@ -17,7 +17,7 @@ async function bootstrap() {
   app.use(json({ limit: '10mb' }));
   app.use(urlencoded({ extended: true, limit: '10mb' }));
 
-  // Strict CORS configuration
+  // CORS configuration
   const corsOrigins = process.env.CORS_ORIGINS
     ? process.env.CORS_ORIGINS.split(',').map((origin) => origin.trim())
     : [
@@ -25,13 +25,35 @@ async function bootstrap() {
         'http://localhost:3001',
         'http://localhost:5173',
         'http://localhost:8081',
+        'http://localhost:8082',
+        'http://localhost:19006',
       ];
 
   app.enableCors({
-    origin: corsOrigins,
+    origin: (
+      origin: string | undefined,
+      callback: (err: Error | null, allow?: boolean) => void,
+    ) => {
+      // Allow requests with no origin (like mobile apps, curl, Postman)
+      if (!origin) return callback(null, true);
+      if (
+        process.env.NODE_ENV !== 'production' ||
+        corsOrigins.includes(origin)
+      ) {
+        return callback(null, true);
+      }
+      return callback(new Error('Not allowed by CORS'));
+    },
     credentials: true,
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-Id'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-Request-Id',
+      'Accept',
+      'Origin',
+      'X-Requested-With',
+    ],
   });
 
   // Strict ValidationPipe
