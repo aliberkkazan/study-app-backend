@@ -1,12 +1,24 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { ForbiddenException, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { AccountabilityService } from './accountability.service';
-import { AccessGrant, AccessGrantStatus, AccessScope } from './entities/access-grant.entity';
+import {
+  AccessGrant,
+  AccessGrantStatus,
+  AccessScope,
+} from './entities/access-grant.entity';
 import { ShareToken, ReportTimeframe } from './entities/share-token.entity';
 import { AccountabilityGroup } from './entities/accountability-group.entity';
 import { GroupMember, GroupRole } from './entities/group-member.entity';
-import { StudySession, SessionVerificationStatus, StudySessionStatus } from '../study-sessions/entities/study-session.entity';
+import {
+  StudySession,
+  SessionVerificationStatus,
+  StudySessionStatus,
+} from '../study-sessions/entities/study-session.entity';
 import { Task } from '../tasks/entities/task.entity';
 import { User } from '../users/entities/user.entity';
 import { TasksService } from '../tasks/tasks.service';
@@ -69,10 +81,19 @@ describe('AccountabilityService', () => {
       providers: [
         AccountabilityService,
         { provide: getRepositoryToken(AccessGrant), useValue: mockGrantRepo },
-        { provide: getRepositoryToken(ShareToken), useValue: mockShareTokenRepo },
-        { provide: getRepositoryToken(AccountabilityGroup), useValue: mockGroupRepo },
+        {
+          provide: getRepositoryToken(ShareToken),
+          useValue: mockShareTokenRepo,
+        },
+        {
+          provide: getRepositoryToken(AccountabilityGroup),
+          useValue: mockGroupRepo,
+        },
         { provide: getRepositoryToken(GroupMember), useValue: mockMemberRepo },
-        { provide: getRepositoryToken(StudySession), useValue: mockSessionRepo },
+        {
+          provide: getRepositoryToken(StudySession),
+          useValue: mockSessionRepo,
+        },
         { provide: getRepositoryToken(Task), useValue: mockTaskRepo },
         { provide: getRepositoryToken(User), useValue: mockUserRepo },
         { provide: TasksService, useValue: mockTasksService },
@@ -97,7 +118,7 @@ describe('AccountabilityService', () => {
       });
 
       expect(result).toBeDefined();
-      expect(result.inviteCode).toMatch(/^AG-[A-F0-9]{6}$/);
+      expect(result.inviteCode).toMatch(/^AG-[A-F0-9]{16}$/);
       expect(result.permissions.canAssignTasks).toBe(true);
       expect(result.permissions.canVerifySessions).toBe(true);
       expect(result.status).toBe(AccessGrantStatus.INVITED);
@@ -111,7 +132,9 @@ describe('AccountabilityService', () => {
         status: AccessGrantStatus.INVITED,
       });
 
-      const result = await service.acceptInvite(mockMentor, { inviteCode: 'AG-123456' });
+      const result = await service.acceptInvite(mockMentor, {
+        inviteCode: 'AG-123456',
+      });
 
       expect(result.status).toBe(AccessGrantStatus.ACTIVE);
       expect(result.granteeId).toBe(mockMentor.id);
@@ -188,7 +211,9 @@ describe('AccountabilityService', () => {
         feedback: 'Well focused session!',
       });
 
-      expect(result.verificationStatus).toBe(SessionVerificationStatus.VERIFIED);
+      expect(result.verificationStatus).toBe(
+        SessionVerificationStatus.VERIFIED,
+      );
       expect(result.mentorFeedback).toBe('Well focused session!');
       expect(result.verifiedById).toBe(mockMentor.id);
     });
@@ -240,7 +265,7 @@ describe('AccountabilityService', () => {
       });
 
       expect(group).toBeDefined();
-      expect(group.code).toMatch(/^GRP-[A-F0-9]{6}$/);
+      expect(group.code).toMatch(/^GRP-[A-F0-9]{16}$/);
       expect(mockMemberRepo.save).toHaveBeenCalledWith(
         expect.objectContaining({ role: GroupRole.ADMIN }),
       );
@@ -267,7 +292,10 @@ describe('AccountabilityService', () => {
         { actualDuration: 45, startTime: new Date('2026-08-22T10:00:00Z') },
       ]); // 3 active days
 
-      const leaderboard = await service.getGroupLeaderboard('user-1', 'group-1');
+      const leaderboard = await service.getGroupLeaderboard(
+        'user-1',
+        'group-1',
+      );
 
       expect(leaderboard.rankings.length).toBe(1);
       expect(leaderboard.rankings[0].completionRate).toBe(100);

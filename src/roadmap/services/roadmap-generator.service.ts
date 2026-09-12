@@ -1,11 +1,21 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
-import { StudyProfile, StudyTrack } from '../../study-profile/entities/study-profile.entity';
+import {
+  StudyProfile,
+  StudyTrack,
+} from '../../study-profile/entities/study-profile.entity';
 import { ExamVersion } from '../../exam-packs/entities/exam-version.entity';
 import { Subject } from '../../exam-packs/entities/subject.entity';
 import { Topic } from '../../exam-packs/entities/topic.entity';
-import { RoadmapItem, RoadmapItemType, RoadmapItemStatus } from '../entities/roadmap-item.entity';
+import {
+  RoadmapItem,
+  RoadmapItemType,
+  RoadmapItemStatus,
+} from '../entities/roadmap-item.entity';
 import { Roadmap } from '../entities/roadmap.entity';
-import { RoadmapVersion, RoadmapGenerationReason } from '../entities/roadmap-version.entity';
+import {
+  RoadmapVersion,
+  RoadmapGenerationReason,
+} from '../entities/roadmap-version.entity';
 
 @Injectable()
 export class RoadmapGeneratorService {
@@ -18,7 +28,8 @@ export class RoadmapGeneratorService {
     startDate: Date,
     overrideWeeklyMinutes?: number,
   ): { version: RoadmapVersion; items: RoadmapItem[] } {
-    const weeklyMinutes = overrideWeeklyMinutes || profile.weeklyAvailabilityMinutes || 1200;
+    const weeklyMinutes =
+      overrideWeeklyMinutes || profile.weeklyAvailabilityMinutes || 1200;
     const targetExamDate = new Date(profile.targetExamDate);
 
     const diffMs = targetExamDate.getTime() - startDate.getTime();
@@ -29,11 +40,17 @@ export class RoadmapGeneratorService {
       `Generating roadmap for track ${profile.track} over ${totalWeeks} weeks with ${weeklyMinutes} mins/week.`,
     );
 
-    const isSatExam = examVersion.sections?.some((s) => s.code.startsWith('SAT_')) ?? false;
+    const isSatExam =
+      examVersion.sections?.some((s) => s.code.startsWith('SAT_')) ?? false;
 
-    const selectedSubjects = this.filterSubjectsForTrack(examVersion, profile.track);
+    const selectedSubjects = this.filterSubjectsForTrack(
+      examVersion,
+      profile.track,
+    );
     if (selectedSubjects.length === 0) {
-      throw new BadRequestException(`No curriculum subjects found for track: ${profile.track}`);
+      throw new BadRequestException(
+        `No curriculum subjects found for track: ${profile.track}`,
+      );
     }
 
     const version = new RoadmapVersion();
@@ -58,9 +75,14 @@ export class RoadmapGeneratorService {
     return { version, items };
   }
 
-  private filterSubjectsForTrack(examVersion: ExamVersion, track: StudyTrack): Subject[] {
+  private filterSubjectsForTrack(
+    examVersion: ExamVersion,
+    track: StudyTrack,
+  ): Subject[] {
     const subjects: Subject[] = [];
-    const isSatExam = examVersion.sections?.some((s) => s.code.startsWith('SAT_'));
+    const isSatExam = examVersion.sections?.some((s) =>
+      s.code.startsWith('SAT_'),
+    );
 
     if (isSatExam) {
       for (const section of examVersion.sections || []) {
@@ -69,7 +91,9 @@ export class RoadmapGeneratorService {
             subjects.push(...(section.subjects || []));
           } else if (section.code === 'SAT_RW') {
             // Include core conventions for balance
-            const coreRw = (section.subjects || []).filter((s) => s.code === 'SAT_RW_CONVENTIONS');
+            const coreRw = (section.subjects || []).filter(
+              (s) => s.code === 'SAT_RW_CONVENTIONS',
+            );
             subjects.push(...coreRw);
           }
         } else if (track === StudyTrack.SAT_RW_FOCUS) {
@@ -77,7 +101,9 @@ export class RoadmapGeneratorService {
             subjects.push(...(section.subjects || []));
           } else if (section.code === 'SAT_MATH') {
             // Include core algebra for balance
-            const coreMath = (section.subjects || []).filter((s) => s.code === 'SAT_MATH_ALGEBRA');
+            const coreMath = (section.subjects || []).filter(
+              (s) => s.code === 'SAT_MATH_ALGEBRA',
+            );
             subjects.push(...coreMath);
           }
         } else {
@@ -92,7 +118,10 @@ export class RoadmapGeneratorService {
     for (const section of examVersion.sections || []) {
       if (section.code === 'TYT') {
         subjects.push(...(section.subjects || []));
-      } else if (track === StudyTrack.SAYISAL && section.code === 'AYT_SAYISAL') {
+      } else if (
+        track === StudyTrack.SAYISAL &&
+        section.code === 'AYT_SAYISAL'
+      ) {
         subjects.push(...(section.subjects || []));
       } else if (track === StudyTrack.ESIT_AGIRLIK) {
         if (section.code === 'AYT_ESIT_AGIRLIK') {
@@ -103,7 +132,10 @@ export class RoadmapGeneratorService {
           );
           subjects.push(...mathSubjects);
         }
-      } else if (track === StudyTrack.SOZEL && section.code === 'AYT_ESIT_AGIRLIK') {
+      } else if (
+        track === StudyTrack.SOZEL &&
+        section.code === 'AYT_ESIT_AGIRLIK'
+      ) {
         const verbalSubjects = (section.subjects || []).filter(
           (s) => !s.code.includes('MAT'),
         );
@@ -129,20 +161,32 @@ export class RoadmapGeneratorService {
   ): RoadmapItem[] {
     const items: RoadmapItem[] = [];
 
-    const allTopics: { topic: Topic; subject: Subject; priorityScore: number }[] = [];
-    
+    const allTopics: {
+      topic: Topic;
+      subject: Subject;
+      priorityScore: number;
+    }[] = [];
+
     // Calculate priority weighting based on track focus & score gaps
-    const scoreGap = (profile.targetScore && profile.currentScore)
-      ? Math.max(0, profile.targetScore - profile.currentScore)
-      : 0;
+    const scoreGap =
+      profile.targetScore && profile.currentScore
+        ? Math.max(0, profile.targetScore - profile.currentScore)
+        : 0;
 
     for (const subject of subjects) {
       for (const topic of subject.topics || []) {
-        let priorityScore = (topic.importanceWeight || 3) * 10 - topic.orderIndex;
-        
-        if (profile.track === StudyTrack.SAT_MATH_FOCUS && subject.code.startsWith('SAT_MATH')) {
+        let priorityScore =
+          (topic.importanceWeight || 3) * 10 - topic.orderIndex;
+
+        if (
+          profile.track === StudyTrack.SAT_MATH_FOCUS &&
+          subject.code.startsWith('SAT_MATH')
+        ) {
           priorityScore += 25;
-        } else if (profile.track === StudyTrack.SAT_RW_FOCUS && subject.code.startsWith('SAT_RW')) {
+        } else if (
+          profile.track === StudyTrack.SAT_RW_FOCUS &&
+          subject.code.startsWith('SAT_RW')
+        ) {
           priorityScore += 25;
         }
 
@@ -171,14 +215,21 @@ export class RoadmapGeneratorService {
 
     for (const { topic, subject } of allTopics) {
       const learnDuration = Math.round((topic.estimatedHours || 4) * 60 * 0.6);
-      const practiceDuration = Math.round((topic.estimatedHours || 4) * 60 * 0.4);
+      const practiceDuration = Math.round(
+        (topic.estimatedHours || 4) * 60 * 0.4,
+      );
 
-      if (currentWeekMinutes + learnDuration > weeklyMinutes && currentWeek < learnWeeksCount) {
+      if (
+        currentWeekMinutes + learnDuration > weeklyMinutes &&
+        currentWeek < learnWeeksCount
+      ) {
         currentWeek++;
         currentWeekMinutes = 0;
       }
 
-      const itemDate = new Date(startDate.getTime() + (currentWeek - 1) * 7 * 24 * 60 * 60 * 1000);
+      const itemDate = new Date(
+        startDate.getTime() + (currentWeek - 1) * 7 * 24 * 60 * 60 * 1000,
+      );
 
       const learnItem = new RoadmapItem();
       learnItem.roadmapVersion = version;
@@ -206,7 +257,9 @@ export class RoadmapGeneratorService {
       practiceItem.topicId = topic.id;
       practiceItem.type = RoadmapItemType.PRACTICE;
       practiceItem.targetWeekNumber = currentWeek;
-      practiceItem.targetDate = new Date(itemDate.getTime() + 2 * 24 * 60 * 60 * 1000);
+      practiceItem.targetDate = new Date(
+        itemDate.getTime() + 2 * 24 * 60 * 60 * 1000,
+      );
       practiceItem.estimatedMinutes = practiceDuration;
       practiceItem.targetOutcome = isSatExam
         ? `${topic.name} - Targeted Question Bank & Timed Drills`
@@ -220,7 +273,9 @@ export class RoadmapGeneratorService {
     const reviewStartWeek = learnWeeksCount + 1;
     const reviewEndWeek = learnWeeksCount + reviewWeeksCount;
     for (let w = reviewStartWeek; w <= reviewEndWeek; w++) {
-      const reviewDate = new Date(startDate.getTime() + (w - 1) * 7 * 24 * 60 * 60 * 1000);
+      const reviewDate = new Date(
+        startDate.getTime() + (w - 1) * 7 * 24 * 60 * 60 * 1000,
+      );
       const reviewItem = new RoadmapItem();
       reviewItem.roadmapVersion = version;
       reviewItem.type = RoadmapItemType.REVIEW;
@@ -236,7 +291,9 @@ export class RoadmapGeneratorService {
 
     const simStartWeek = reviewEndWeek + 1;
     for (let w = simStartWeek; w <= totalWeeks; w++) {
-      const simDate = new Date(startDate.getTime() + (w - 1) * 7 * 24 * 60 * 60 * 1000);
+      const simDate = new Date(
+        startDate.getTime() + (w - 1) * 7 * 24 * 60 * 60 * 1000,
+      );
       const simItem = new RoadmapItem();
       simItem.roadmapVersion = version;
       simItem.type = RoadmapItemType.SIMULATE;

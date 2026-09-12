@@ -19,7 +19,9 @@ export class EducationSystem extends BaseEntity {
   nativeName: string;
 
   @ApiProperty({ type: () => Country })
-  @ManyToOne(() => Country, (country) => country.educationSystems, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Country, (country) => country.educationSystems, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'country_id' })
   country: Country;
 

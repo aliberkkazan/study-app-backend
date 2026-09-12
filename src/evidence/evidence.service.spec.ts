@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { EvidenceService } from './evidence.service';
 import { Evidence } from './entities/evidence.entity';
+import { AccessGrant } from '../accountability/entities/access-grant.entity';
 import { FilesService } from '../files/files.service';
 import { UsersService } from '../users/users.service';
 
@@ -21,6 +22,13 @@ describe('EvidenceService', () => {
             findOne: jest.fn(),
             update: jest.fn(),
             remove: jest.fn(),
+          },
+        },
+        {
+          provide: getRepositoryToken(AccessGrant),
+          useValue: {
+            findOne: jest.fn(),
+            find: jest.fn(),
           },
         },
         {

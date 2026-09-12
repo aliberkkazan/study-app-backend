@@ -1,13 +1,27 @@
-import { Injectable, ConflictException, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { StudySession, StudySessionStatus } from './entities/study-session.entity';
+import {
+  StudySession,
+  StudySessionStatus,
+} from './entities/study-session.entity';
 import { StudyResult } from './entities/study-result.entity';
 import { Task } from '../tasks/entities/task.entity';
 import { StartSessionDto } from './dto/start-session.dto';
 import { FinishSessionDto } from './dto/finish-session.dto';
 import { RecordSessionDto } from './dto/record-session.dto';
-import { GetProgressQueryDto, ProgressResponseDto, ProgressTimeframe, SubjectProgressDto, DailyProgressDto } from './dto/progress.dto';
+import {
+  GetProgressQueryDto,
+  ProgressResponseDto,
+  ProgressTimeframe,
+  SubjectProgressDto,
+  DailyProgressDto,
+} from './dto/progress.dto';
 import { User } from '../users/entities/user.entity';
 import { TasksService } from '../tasks/tasks.service';
 
@@ -46,7 +60,10 @@ export class StudySessionsService {
     });
 
     if (startSessionDto.taskId) {
-      const task = await this.tasksService.findOne(startSessionDto.taskId, user.id);
+      const task = await this.tasksService.findOne(
+        startSessionDto.taskId,
+        user.id,
+      );
       session.task = task;
     }
 
@@ -60,10 +77,14 @@ export class StudySessionsService {
     });
 
     if (!session) throw new NotFoundException('Session not found');
-    if (session.user.id !== userId) throw new ForbiddenException('Not your session');
+    if (session.user.id !== userId)
+      throw new ForbiddenException('Not your session');
 
     // Idempotency check — same key + already finished: return existing
-    if (session.status === StudySessionStatus.FINISHED && session.idempotencyKey === finishSessionDto.idempotencyKey) {
+    if (
+      session.status === StudySessionStatus.FINISHED &&
+      session.idempotencyKey === finishSessionDto.idempotencyKey
+    ) {
       return session;
     }
 
@@ -105,7 +126,9 @@ export class StudySessionsService {
       }
     } else if (dto.courseName || dto.taskTitle) {
       task = this.taskRepository.create({
-        title: dto.taskTitle || (dto.courseName ? `${dto.courseName} Study` : 'Study Session'),
+        title:
+          dto.taskTitle ||
+          (dto.courseName ? `${dto.courseName} Study` : 'Study Session'),
         subject: dto.courseName || 'General',
         topic: dto.topicName,
         completed: true,
@@ -121,7 +144,9 @@ export class StudySessionsService {
       focusQuality: dto.focusQuality,
     });
 
-    const startTime = dto.startedAt ? new Date(dto.startedAt) : new Date(Date.now() - duration * 60000);
+    const startTime = dto.startedAt
+      ? new Date(dto.startedAt)
+      : new Date(Date.now() - duration * 60000);
     const endTime = dto.endedAt ? new Date(dto.endedAt) : new Date();
 
     const session = this.studySessionRepository.create({
@@ -132,7 +157,9 @@ export class StudySessionsService {
       targetDuration: duration,
       actualDuration: duration,
       status: StudySessionStatus.FINISHED,
-      idempotencyKey: dto.idempotencyKey || `rec-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
+      idempotencyKey:
+        dto.idempotencyKey ||
+        `rec-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
       result,
     });
 
@@ -146,7 +173,8 @@ export class StudySessionsService {
     });
 
     if (!session) throw new NotFoundException('Session not found');
-    if (session.user.id !== userId) throw new ForbiddenException('Not your session');
+    if (session.user.id !== userId)
+      throw new ForbiddenException('Not your session');
 
     if (session.status !== StudySessionStatus.ACTIVE) {
       throw new ConflictException('Session is not active');
@@ -162,12 +190,15 @@ export class StudySessionsService {
     return this.studySessionRepository.find({
       where: { user: { id: userId } },
       relations: { task: true, result: true },
-      order: { startTime: "DESC" },
+      order: { startTime: 'DESC' },
       take: 100,
     });
   }
 
-  async getProgress(userId: string, query: GetProgressQueryDto = {}): Promise<ProgressResponseDto> {
+  async getProgress(
+    userId: string,
+    query: GetProgressQueryDto = {},
+  ): Promise<ProgressResponseDto> {
     const timeframe = query.timeframe || ProgressTimeframe.WEEK;
     let startDate: Date;
     let endDate: Date;
@@ -198,7 +229,9 @@ export class StudySessionsService {
       .leftJoinAndSelect('session.task', 'task')
       .leftJoinAndSelect('session.result', 'result')
       .where('session.user_id = :userId', { userId })
-      .andWhere('session.status = :status', { status: StudySessionStatus.FINISHED })
+      .andWhere('session.status = :status', {
+        status: StudySessionStatus.FINISHED,
+      })
       .andWhere('session.start_time >= :startDate', { startDate })
       .andWhere('session.start_time <= :endDate', { endDate })
       .orderBy('session.start_time', 'ASC');
@@ -209,19 +242,37 @@ export class StudySessionsService {
       .createQueryBuilder('task')
       .where('task.owner_id = :userId', { userId })
       .andWhere('task.deleted_at IS NULL')
-      .andWhere('(task.scheduled_date >= :startDate OR (task.scheduled_date IS NULL AND task.created_at >= :startDate))', { startDate })
-      .andWhere('(task.scheduled_date <= :endDate OR (task.scheduled_date IS NULL AND task.created_at <= :endDate))', { endDate });
+      .andWhere(
+        '(task.scheduled_date >= :startDate OR (task.scheduled_date IS NULL AND task.created_at >= :startDate))',
+        { startDate },
+      )
+      .andWhere(
+        '(task.scheduled_date <= :endDate OR (task.scheduled_date IS NULL AND task.created_at <= :endDate))',
+        { endDate },
+      );
 
     const tasks = await taskQuery.getMany();
 
-    const totalStudyMinutes = sessions.reduce((acc, s) => acc + (s.actualDuration || 0), 0);
+    const totalStudyMinutes = sessions.reduce(
+      (acc, s) => acc + (s.actualDuration || 0),
+      0,
+    );
     const totalStudyHours = Math.round((totalStudyMinutes / 60) * 10) / 10;
     const completedTasks = tasks.filter((t) => t.completed).length;
     const totalTasks = tasks.length;
-    const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+    const completionRate =
+      totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
     // Subject breakdown
-    const subjectMap = new Map<string, { totalMinutes: number; sessionCount: number; correctCount: number; wrongCount: number }>();
+    const subjectMap = new Map<
+      string,
+      {
+        totalMinutes: number;
+        sessionCount: number;
+        correctCount: number;
+        wrongCount: number;
+      }
+    >();
 
     for (const s of sessions) {
       const subjectName = s.task?.subject || 'General';
@@ -241,7 +292,9 @@ export class StudySessionsService {
       subjectMap.set(subjectName, existing);
     }
 
-    const subjectBreakdown: SubjectProgressDto[] = Array.from(subjectMap.entries())
+    const subjectBreakdown: SubjectProgressDto[] = Array.from(
+      subjectMap.entries(),
+    )
       .map(([subject, data]) => ({
         subject,
         ...data,
@@ -249,17 +302,25 @@ export class StudySessionsService {
       .sort((a, b) => b.totalMinutes - a.totalMinutes);
 
     // Daily breakdown
-    const dailyMap = new Map<string, { totalMinutes: number; sessionCount: number }>();
+    const dailyMap = new Map<
+      string,
+      { totalMinutes: number; sessionCount: number }
+    >();
 
     for (const s of sessions) {
       let dateKey: string;
       try {
-        dateKey = new Intl.DateTimeFormat('en-CA', { timeZone: query.timezone || 'UTC' }).format(new Date(s.startTime));
+        dateKey = new Intl.DateTimeFormat('en-CA', {
+          timeZone: query.timezone || 'UTC',
+        }).format(new Date(s.startTime));
       } catch {
         dateKey = new Date(s.startTime).toISOString().split('T')[0];
       }
 
-      const existing = dailyMap.get(dateKey) || { totalMinutes: 0, sessionCount: 0 };
+      const existing = dailyMap.get(dateKey) || {
+        totalMinutes: 0,
+        sessionCount: 0,
+      };
       existing.totalMinutes += s.actualDuration || 0;
       existing.sessionCount += 1;
       dailyMap.set(dateKey, existing);
@@ -273,31 +334,36 @@ export class StudySessionsService {
       .sort((a, b) => a.date.localeCompare(b.date));
 
     // Calculate real consecutive study days streak
-    const allFinished = (await this.studySessionRepository.find({
-      where: { user: { id: userId }, status: StudySessionStatus.FINISHED },
-      order: { startTime: "DESC" },
-    })) || [];
+    const allFinished =
+      (await this.studySessionRepository.find({
+        where: { user: { id: userId }, status: StudySessionStatus.FINISHED },
+        order: { startTime: 'DESC' },
+      })) || [];
 
     const activeDateSet = new Set<string>();
     for (const s of allFinished) {
       if (s.startTime) {
         try {
-          const dateStr = new Intl.DateTimeFormat("en-CA", { timeZone: query.timezone || "UTC" }).format(new Date(s.startTime));
+          const dateStr = new Intl.DateTimeFormat('en-CA', {
+            timeZone: query.timezone || 'UTC',
+          }).format(new Date(s.startTime));
           activeDateSet.add(dateStr);
         } catch {
-          activeDateSet.add(new Date(s.startTime).toISOString().split("T")[0]);
+          activeDateSet.add(new Date(s.startTime).toISOString().split('T')[0]);
         }
       }
     }
 
     let streakDays = 0;
     const now = new Date();
-    let checkDate = new Date(now);
+    const checkDate = new Date(now);
     let todayStr: string;
     try {
-      todayStr = new Intl.DateTimeFormat("en-CA", { timeZone: query.timezone || "UTC" }).format(now);
+      todayStr = new Intl.DateTimeFormat('en-CA', {
+        timeZone: query.timezone || 'UTC',
+      }).format(now);
     } catch {
-      todayStr = now.toISOString().split("T")[0];
+      todayStr = now.toISOString().split('T')[0];
     }
 
     if (!activeDateSet.has(todayStr)) {
@@ -307,9 +373,11 @@ export class StudySessionsService {
     while (true) {
       let dStr: string;
       try {
-        dStr = new Intl.DateTimeFormat("en-CA", { timeZone: query.timezone || "UTC" }).format(checkDate);
+        dStr = new Intl.DateTimeFormat('en-CA', {
+          timeZone: query.timezone || 'UTC',
+        }).format(checkDate);
       } catch {
-        dStr = checkDate.toISOString().split("T")[0];
+        dStr = checkDate.toISOString().split('T')[0];
       }
 
       if (activeDateSet.has(dStr)) {

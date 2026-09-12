@@ -14,7 +14,12 @@ import { TasksModule } from '../tasks/tasks.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Roadmap, RoadmapVersion, RoadmapItem, ReplanEvent]),
+    TypeOrmModule.forFeature([
+      Roadmap,
+      RoadmapVersion,
+      RoadmapItem,
+      ReplanEvent,
+    ]),
     StudyProfileModule,
     ExamPacksModule,
     TasksModule,

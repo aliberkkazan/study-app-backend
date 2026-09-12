@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDateString, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
+import {
+  IsDateString,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from 'class-validator';
 
 export class CreateTaskDto {
   @ApiProperty({ example: 'Advanced Math' })
@@ -7,7 +13,10 @@ export class CreateTaskDto {
   @IsString()
   title: string;
 
-  @ApiProperty({ example: 'Weekly study program for calculus', required: false })
+  @ApiProperty({
+    example: 'Weekly study program for calculus',
+    required: false,
+  })
   @IsOptional()
   @IsString()
   description?: string;

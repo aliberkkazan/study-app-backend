@@ -35,7 +35,10 @@ export class Subject extends BaseEntity {
   @Column({ name: 'order_index', default: 1 })
   orderIndex: number;
 
-  @ApiProperty({ example: '#4F46E5', description: 'Hex color code for UI representation' })
+  @ApiProperty({
+    example: '#4F46E5',
+    description: 'Hex color code for UI representation',
+  })
   @Column({ name: 'color_code', default: '#4F46E5' })
   colorCode: string;
 
@@ -44,7 +47,9 @@ export class Subject extends BaseEntity {
   iconName: string;
 
   @ApiProperty({ type: () => ExamSection })
-  @ManyToOne(() => ExamSection, (section) => section.subjects, { onDelete: 'CASCADE' })
+  @ManyToOne(() => ExamSection, (section) => section.subjects, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'exam_section_id' })
   examSection: ExamSection;
 

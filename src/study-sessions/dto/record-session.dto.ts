@@ -1,5 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsDateString, IsNumber, IsOptional, IsString, IsUUID, Max, Min } from 'class-validator';
+import {
+  IsBoolean,
+  IsDateString,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Max,
+  Min,
+} from 'class-validator';
 
 export class RecordSessionDto {
   @ApiProperty({ example: 'task-uuid-v4', required: false })
@@ -27,7 +36,11 @@ export class RecordSessionDto {
   @IsNumber()
   durationMinutes?: number;
 
-  @ApiProperty({ example: 45, description: 'Actual duration in minutes', required: false })
+  @ApiProperty({
+    example: 45,
+    description: 'Actual duration in minutes',
+    required: false,
+  })
   @IsOptional()
   @IsNumber()
   actualDuration?: number;

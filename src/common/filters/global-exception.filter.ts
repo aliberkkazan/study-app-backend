@@ -30,11 +30,13 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       const responsePayload = exception.getResponse() as any;
       message = responsePayload.message || exception.message;
       code = responsePayload.code || this.getHttpStatusName(status);
-      
+
       if (Array.isArray(message)) {
         fieldErrors = message.reduce((acc, msg) => {
           // A very generic mapping, class-validator usually returns arrays of strings
-          acc['validation'] = acc['validation'] ? [...acc['validation'], msg] : [msg];
+          acc['validation'] = acc['validation']
+            ? [...acc['validation'], msg]
+            : [msg];
           return acc;
         }, {});
         message = 'Validation failed';
@@ -60,13 +62,20 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
   private getHttpStatusName(status: number): string {
     switch (status) {
-      case 400: return 'BAD_REQUEST';
-      case 401: return 'UNAUTHORIZED';
-      case 403: return 'FORBIDDEN';
-      case 404: return 'NOT_FOUND';
-      case 409: return 'CONFLICT';
-      case 422: return 'UNPROCESSABLE_ENTITY';
-      default: return 'ERROR';
+      case 400:
+        return 'BAD_REQUEST';
+      case 401:
+        return 'UNAUTHORIZED';
+      case 403:
+        return 'FORBIDDEN';
+      case 404:
+        return 'NOT_FOUND';
+      case 409:
+        return 'CONFLICT';
+      case 422:
+        return 'UNPROCESSABLE_ENTITY';
+      default:
+        return 'ERROR';
     }
   }
 }

@@ -1,4 +1,9 @@
-import { PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 
 /**
@@ -14,10 +19,10 @@ export abstract class BaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ApiProperty({ 
-    example: true, 
-    description: 'Indicates if the record is active (soft delete)', 
-    default: true 
+  @ApiProperty({
+    example: true,
+    description: 'Indicates if the record is active (soft delete)',
+    default: true,
   })
   @Column({ default: true })
   active: boolean;

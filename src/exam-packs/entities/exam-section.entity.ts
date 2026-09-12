@@ -18,12 +18,17 @@ export class ExamSection extends BaseEntity {
   @Column({ name: 'order_index', default: 1 })
   orderIndex: number;
 
-  @ApiProperty({ example: 'Genel lise temel yeterlilik değerlendirmesi', required: false })
+  @ApiProperty({
+    example: 'Genel lise temel yeterlilik değerlendirmesi',
+    required: false,
+  })
   @Column({ type: 'text', nullable: true })
   description: string;
 
   @ApiProperty({ type: () => ExamVersion })
-  @ManyToOne(() => ExamVersion, (version) => version.sections, { onDelete: 'CASCADE' })
+  @ManyToOne(() => ExamVersion, (version) => version.sections, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'exam_version_id' })
   examVersion: ExamVersion;
 

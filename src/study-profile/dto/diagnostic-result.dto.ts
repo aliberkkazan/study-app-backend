@@ -1,5 +1,12 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsISO8601, IsNumber, IsObject, IsOptional, IsString, IsUUID } from 'class-validator';
+import {
+  IsISO8601,
+  IsNumber,
+  IsObject,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from 'class-validator';
 
 export class CreateDiagnosticResultDto {
   @ApiProperty({ description: 'Exam version ID' })
@@ -24,14 +31,26 @@ export class CreateDiagnosticResultDto {
   @IsObject()
   sectionScores: Record<
     string,
-    { correct: number; wrong: number; net?: number; scaledScore?: number; topics?: Record<string, number> }
+    {
+      correct: number;
+      wrong: number;
+      net?: number;
+      scaledScore?: number;
+      topics?: Record<string, number>;
+    }
   >;
 
-  @ApiProperty({ example: 1400, description: 'Total scaled score (e.g. 1400 for SAT) or total net score (e.g. 86.0 for YKS)' })
+  @ApiProperty({
+    example: 1400,
+    description:
+      'Total scaled score (e.g. 1400 for SAT) or total net score (e.g. 86.0 for YKS)',
+  })
   @IsNumber()
   totalNetScore: number;
 
-  @ApiPropertyOptional({ example: 'Eksik konular: Paragraf ve Basit Eşitsizlik' })
+  @ApiPropertyOptional({
+    example: 'Eksik konular: Paragraf ve Basit Eşitsizlik',
+  })
   @IsOptional()
   @IsString()
   notes?: string;

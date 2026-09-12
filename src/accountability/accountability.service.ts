@@ -67,7 +67,9 @@ export class AccountabilityService {
 
     if (inviteEmail) {
       if (granter.email && inviteEmail === granter.email.trim().toLowerCase()) {
-        throw new BadRequestException("Kendinize partnerlik daveti gönderemezsiniz.");
+        throw new BadRequestException(
+          'Kendinize partnerlik daveti gönderemezsiniz.',
+        );
       }
 
       targetUser = await this.userRepo.findOne({
@@ -93,19 +95,21 @@ export class AccountabilityService {
         if (existingGrant) {
           throw new BadRequestException(
             existingGrant.status === AccessGrantStatus.ACTIVE
-              ? "Bu kullanıcı ile zaten aktif bir partnerliğiniz var."
-              : "Bu kullanıcı ile zaten bekleyen bir davetiniz var.",
+              ? 'Bu kullanıcı ile zaten aktif bir partnerliğiniz var.'
+              : 'Bu kullanıcı ile zaten bekleyen bir davetiniz var.',
           );
         }
       }
     }
 
-    const inviteCode = "AG-" + randomBytes(3).toString("hex").toUpperCase();
+    const inviteCode = 'AG-' + randomBytes(8).toString('hex').toUpperCase();
 
     const defaultPermissions: GrantPermissions = {
-      canAssignTasks: scope === AccessScope.MENTOR || scope === AccessScope.INSTITUTION,
+      canAssignTasks:
+        scope === AccessScope.MENTOR || scope === AccessScope.INSTITUTION,
       canViewResults: true,
-      canVerifySessions: scope === AccessScope.MENTOR || scope === AccessScope.INSTITUTION,
+      canVerifySessions:
+        scope === AccessScope.MENTOR || scope === AccessScope.INSTITUTION,
       canGiveFeedback: true,
       ...(dto.permissions || {}),
     };
@@ -134,7 +138,10 @@ export class AccountabilityService {
     };
   }
 
-  async acceptInvite(grantee: User, dto: AcceptInviteDto): Promise<AccessGrant> {
+  async acceptInvite(
+    grantee: User,
+    dto: AcceptInviteDto,
+  ): Promise<AccessGrant> {
     let grant: AccessGrant | null = null;
 
     if (dto.grantId) {
@@ -148,25 +155,42 @@ export class AccountabilityService {
         relations: { granter: true, grantee: true },
       });
     } else {
-      throw new BadRequestException("Lütfen davet kodunu veya davet kimliğini belirtin.");
+      throw new BadRequestException(
+        'Lütfen davet kodunu veya davet kimliğini belirtin.',
+      );
     }
 
     if (!grant) {
-      throw new NotFoundException("Geçersiz veya süresi dolmuş davet kodu.");
+      throw new NotFoundException('Geçersiz veya süresi dolmuş davet kodu.');
     }
 
     if (grant.granterId === grantee.id) {
-      throw new BadRequestException("Kendi davetinizi kabul edemezsiniz.");
+      throw new BadRequestException('Kendi davetinizi kabul edemezsiniz.');
+    }
+
+    // Require exact email match if an inviteEmail was designated
+    if (grant.inviteEmail) {
+      if (
+        !grantee.email ||
+        grant.inviteEmail.trim().toLowerCase() !==
+          grantee.email.trim().toLowerCase()
+      ) {
+        throw new ForbiddenException(
+          `Bu davet yalnızca ${grant.inviteEmail} e-posta adresine sahip kullanıcı tarafından kabul edilebilir.`,
+        );
+      }
     }
 
     if (grant.status !== AccessGrantStatus.INVITED) {
-      throw new BadRequestException("Bu davet zaten " + grant.status.toLowerCase() + " durumunda.");
+      throw new BadRequestException(
+        'Bu davet zaten ' + grant.status.toLowerCase() + ' durumunda.',
+      );
     }
 
     if (grant.expiresAt && grant.expiresAt < new Date()) {
       grant.status = AccessGrantStatus.EXPIRED;
       await this.grantRepo.save(grant);
-      throw new BadRequestException("Davetin süresi dolmuş.");
+      throw new BadRequestException('Davetin süresi dolmuş.');
     }
 
     grant.grantee = grantee;
@@ -192,7 +216,7 @@ export class AccountabilityService {
           grantee: grant.granter,
           scope: AccessScope.PARTNER,
           status: AccessGrantStatus.ACTIVE,
-          inviteCode: "AG-" + randomBytes(3).toString("hex").toUpperCase(),
+          inviteCode: 'AG-' + randomBytes(8).toString('hex').toUpperCase(),
           permissions: grant.permissions,
         });
         await this.grantRepo.save(reciprocalGrant);
@@ -206,7 +230,7 @@ export class AccountabilityService {
     return this.grantRepo.find({
       where: { granterId: userId },
       relations: { grantee: true },
-      order: { created_at: "DESC" },
+      order: { created_at: 'DESC' },
     });
   }
 
@@ -216,10 +240,13 @@ export class AccountabilityService {
         .createQueryBuilder()
         .update(AccessGrant)
         .set({ granteeId: user.id })
-        .where("LOWER(invite_email) = LOWER(:email) AND grantee_id IS NULL AND status = :status", {
-          email: user.email.trim(),
-          status: AccessGrantStatus.INVITED,
-        })
+        .where(
+          'LOWER(invite_email) = LOWER(:email) AND grantee_id IS NULL AND status = :status',
+          {
+            email: user.email.trim(),
+            status: AccessGrantStatus.INVITED,
+          },
+        )
         .execute();
     }
 
@@ -240,7 +267,7 @@ export class AccountabilityService {
     return this.grantRepo.find({
       where: whereConditions,
       relations: { granter: true },
-      order: { created_at: "DESC" },
+      order: { created_at: 'DESC' },
     });
   }
 
@@ -250,7 +277,7 @@ export class AccountabilityService {
     });
 
     if (!grant) {
-      throw new NotFoundException("Erişim yetkisi bulunamadı.");
+      throw new NotFoundException('Erişim yetkisi bulunamadı.');
     }
 
     const isGranter = grant.granterId === user.id;
@@ -258,10 +285,13 @@ export class AccountabilityService {
       grant.granteeId === user.id ||
       (grant.inviteEmail &&
         user.email &&
-        grant.inviteEmail.trim().toLowerCase() === user.email.trim().toLowerCase());
+        grant.inviteEmail.trim().toLowerCase() ===
+          user.email.trim().toLowerCase());
 
     if (!isGranter && !isGrantee) {
-      throw new ForbiddenException("Bu daveti veya yetkiyi kaldırma izniniz yok.");
+      throw new ForbiddenException(
+        'Bu daveti veya yetkiyi kaldırma izniniz yok.',
+      );
     }
 
     grant.status = AccessGrantStatus.REVOKED;
@@ -289,15 +319,24 @@ export class AccountabilityService {
     return !!grant.permissions?.[permission];
   }
 
-  async assignTaskToStudent(mentor: User, dto: AssignStudentTaskDto): Promise<Task> {
-    const hasPermission = await this.checkPermission(mentor.id, dto.studentId, 'canAssignTasks');
+  async assignTaskToStudent(
+    mentor: User,
+    dto: AssignStudentTaskDto,
+  ): Promise<Task> {
+    const hasPermission = await this.checkPermission(
+      mentor.id,
+      dto.studentId,
+      'canAssignTasks',
+    );
     if (!hasPermission) {
       throw new ForbiddenException(
         'You do not have permission to assign tasks to this student. An active AccessGrant with canAssignTasks is required.',
       );
     }
 
-    const student = await this.userRepo.findOne({ where: { id: dto.studentId } });
+    const student = await this.userRepo.findOne({
+      where: { id: dto.studentId },
+    });
     if (!student) {
       throw new NotFoundException('Student user not found.');
     }
@@ -355,7 +394,10 @@ export class AccountabilityService {
   // Shareable Privacy-Preserving Reports
   // ----------------------------------------------------
 
-  async createShareToken(user: User, dto: CreateShareTokenDto): Promise<ShareToken> {
+  async createShareToken(
+    user: User,
+    dto: CreateShareTokenDto,
+  ): Promise<ShareToken> {
     const token = `pub_${randomBytes(16).toString('hex')}`;
     const durationDays = dto.durationDays || 7;
     const expiresAt = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000);
@@ -396,7 +438,9 @@ export class AccountabilityService {
     });
 
     if (!shareToken) {
-      throw new NotFoundException('Shareable report link is invalid, expired, or revoked.');
+      throw new NotFoundException(
+        'Shareable report link is invalid, expired, or revoked.',
+      );
     }
 
     const user = shareToken.user;
@@ -421,10 +465,14 @@ export class AccountabilityService {
       },
     });
 
-    const totalMinutes = sessions.reduce((acc, s) => acc + (s.actualDuration || 0), 0);
+    const totalMinutes = sessions.reduce(
+      (acc, s) => acc + (s.actualDuration || 0),
+      0,
+    );
     const completedTasks = tasks.filter((t) => t.completed).length;
     const totalTasks = tasks.length;
-    const taskCompletionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+    const taskCompletionRate =
+      totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
     // Minimum data principle: mask identifiable info, return aggregated metrics
     const displayName = user.name
@@ -450,8 +498,11 @@ export class AccountabilityService {
   // Accountability Groups & Leaderboards
   // ----------------------------------------------------
 
-  async createGroup(creator: User, dto: CreateGroupDto): Promise<AccountabilityGroup> {
-    const code = `GRP-${randomBytes(3).toString('hex').toUpperCase()}`;
+  async createGroup(
+    creator: User,
+    dto: CreateGroupDto,
+  ): Promise<AccountabilityGroup> {
+    const code = `GRP-${randomBytes(8).toString('hex').toUpperCase()}`;
 
     const group = this.groupRepo.create({
       name: dto.name,
@@ -482,7 +533,9 @@ export class AccountabilityService {
     });
 
     if (!group) {
-      throw new NotFoundException('Accountability group not found with this code.');
+      throw new NotFoundException(
+        'Accountability group not found with this code.',
+      );
     }
 
     const existingMember = await this.memberRepo.findOne({
@@ -531,7 +584,9 @@ export class AccountabilityService {
     });
 
     if (!isMember) {
-      throw new ForbiddenException('You must be a member of this group to view the leaderboard.');
+      throw new ForbiddenException(
+        'You must be a member of this group to view the leaderboard.',
+      );
     }
 
     const members = await this.memberRepo.find({
@@ -557,18 +612,26 @@ export class AccountabilityService {
           },
         });
 
-        const totalMinutes = sessions.reduce((acc, s) => acc + (s.actualDuration || 0), 0);
+        const totalMinutes = sessions.reduce(
+          (acc, s) => acc + (s.actualDuration || 0),
+          0,
+        );
         const completedTasks = tasks.filter((t) => t.completed).length;
         const totalTasks = tasks.length;
-        const completionRate = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+        const completionRate =
+          totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
         // Balance scoring formula: Goal Completion % (50%) + Streak/Active Days (50%)
         // Avoid raw brute-force minute gaming!
         const activeDaysCount = new Set(
-          sessions.map((s) => new Date(s.startTime).toISOString().split('T')[0]),
+          sessions.map(
+            (s) => new Date(s.startTime).toISOString().split('T')[0],
+          ),
         ).size;
 
-        const score = Math.round(completionRate * 0.5 + Math.min(activeDaysCount * 10, 50));
+        const score = Math.round(
+          completionRate * 0.5 + Math.min(activeDaysCount * 10, 50),
+        );
 
         return {
           userId: m.userId,
@@ -584,7 +647,9 @@ export class AccountabilityService {
       }),
     );
 
-    leaderboardEntries.sort((a, b) => b.accountabilityScore - a.accountabilityScore);
+    leaderboardEntries.sort(
+      (a, b) => b.accountabilityScore - a.accountabilityScore,
+    );
 
     return {
       groupId,

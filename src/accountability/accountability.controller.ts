@@ -9,7 +9,13 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiResponse,
+} from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { AccountabilityService } from './accountability.service';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { User } from '../users/entities/user.entity';
@@ -32,13 +38,18 @@ export class AccountabilityController {
   // Access Grants
   // ----------------------------------------------------
 
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Post('grants/invite')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Create an invite code for mentor, parent, partner, or institution' })
+  @ApiOperation({
+    summary:
+      'Create an invite code for mentor, parent, partner, or institution',
+  })
   async createInvite(@CurrentUser() user: User, @Body() dto: CreateInviteDto) {
     return this.accountabilityService.createInvite(user, dto);
   }
 
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Post('grants/accept')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Accept an access grant invite using the code' })
@@ -55,7 +66,9 @@ export class AccountabilityController {
 
   @Get('grants/received')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get list of students/users who granted access to me' })
+  @ApiOperation({
+    summary: 'Get list of students/users who granted access to me',
+  })
   async getReceivedAccessList(@CurrentUser() user: User) {
     return this.accountabilityService.getReceivedAccessList(user);
   }
@@ -69,7 +82,9 @@ export class AccountabilityController {
 
   @Post('tasks/assign')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Mentor assigns a task to a student (requires active AccessGrant)' })
+  @ApiOperation({
+    summary: 'Mentor assigns a task to a student (requires active AccessGrant)',
+  })
   async assignTaskToStudent(
     @CurrentUser() mentor: User,
     @Body() dto: AssignStudentTaskDto,
@@ -79,7 +94,9 @@ export class AccountabilityController {
 
   @Post('sessions/:id/verify')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Mentor verifies a student study session and provides feedback' })
+  @ApiOperation({
+    summary: 'Mentor verifies a student study session and provides feedback',
+  })
   async verifySession(
     @CurrentUser() verifier: User,
     @Param('id') sessionId: string,
@@ -92,9 +109,12 @@ export class AccountabilityController {
   // Shareable Privacy-Preserving Reports
   // ----------------------------------------------------
 
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Post('reports/share')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Generate a public, temporary, privacy-preserving share link' })
+  @ApiOperation({
+    summary: 'Generate a public, temporary, privacy-preserving share link',
+  })
   async createShareToken(
     @CurrentUser() user: User,
     @Body() dto: CreateShareTokenDto,
@@ -113,8 +133,12 @@ export class AccountabilityController {
   }
 
   @Public()
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   @Get('reports/shared/:token')
-  @ApiOperation({ summary: 'Public endpoint to view student study report (minimum data principle)' })
+  @ApiOperation({
+    summary:
+      'Public endpoint to view student study report (minimum data principle)',
+  })
   async getPublicReport(@Param('token') token: string) {
     return this.accountabilityService.getPublicReport(token);
   }
@@ -130,6 +154,7 @@ export class AccountabilityController {
     return this.accountabilityService.createGroup(user, dto);
   }
 
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Post('groups/join')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Join an accountability group using its join code' })
@@ -155,7 +180,8 @@ export class AccountabilityController {
   @Get('groups/:id/leaderboard')
   @ApiBearerAuth()
   @ApiOperation({
-    summary: 'Get group leaderboard scored by goal completion rate and active consistency',
+    summary:
+      'Get group leaderboard scored by goal completion rate and active consistency',
   })
   async getGroupLeaderboard(
     @CurrentUser() user: User,

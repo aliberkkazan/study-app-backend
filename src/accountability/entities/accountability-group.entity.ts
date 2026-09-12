@@ -10,7 +10,10 @@ export class AccountabilityGroup extends BaseEntity {
   @Column()
   name: string;
 
-  @ApiProperty({ example: 'Haftalık hedef takibi ve soru çözüm disiplini grubu', required: false })
+  @ApiProperty({
+    example: 'Haftalık hedef takibi ve soru çözüm disiplini grubu',
+    required: false,
+  })
   @Column({ type: 'text', nullable: true })
   description?: string;
 

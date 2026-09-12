@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
@@ -20,7 +30,11 @@ export class TasksController {
 
   @Get()
   @ApiQuery({ name: 'studentId', required: false })
-  @ApiQuery({ name: 'status', required: false, enum: ['today', 'upcoming', 'flexible'] })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: ['today', 'upcoming', 'flexible'],
+  })
   @ApiQuery({ name: 'subject', required: false })
   findAll(
     @CurrentUser() user: User,
@@ -37,7 +51,11 @@ export class TasksController {
   }
 
   @Patch(':id')
-  update(@CurrentUser() user: User, @Param('id') id: string, @Body() updateTaskDto: UpdateTaskDto) {
+  update(
+    @CurrentUser() user: User,
+    @Param('id') id: string,
+    @Body() updateTaskDto: UpdateTaskDto,
+  ) {
     return this.tasksService.update(id, user, updateTaskDto);
   }
 

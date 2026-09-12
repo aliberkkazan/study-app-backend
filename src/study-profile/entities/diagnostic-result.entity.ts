@@ -27,7 +27,11 @@ export class DiagnosticResult extends BaseEntity {
   title: string;
 
   @ApiProperty({ example: '2026-09-10T10:00:00Z' })
-  @Column({ name: 'date_taken', type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
+  @Column({
+    name: 'date_taken',
+    type: 'timestamptz',
+    default: () => 'CURRENT_TIMESTAMP',
+  })
   dateTaken: Date;
 
   @ApiProperty({
@@ -39,13 +43,24 @@ export class DiagnosticResult extends BaseEntity {
     },
   })
   @Column({ name: 'section_scores', type: 'jsonb' })
-  sectionScores: Record<string, { correct: number; wrong: number; net: number; topics?: Record<string, number> }>;
+  sectionScores: Record<
+    string,
+    {
+      correct: number;
+      wrong: number;
+      net: number;
+      topics?: Record<string, number>;
+    }
+  >;
 
   @ApiProperty({ example: 86.0 })
   @Column({ name: 'total_net_score', type: 'float' })
   totalNetScore: number;
 
-  @ApiProperty({ example: 'Matematik problemleri ve Paragraf üzerinde yoğunlaşılmalı.', required: false })
+  @ApiProperty({
+    example: 'Matematik problemleri ve Paragraf üzerinde yoğunlaşılmalı.',
+    required: false,
+  })
   @Column({ type: 'text', nullable: true })
   notes?: string;
 }

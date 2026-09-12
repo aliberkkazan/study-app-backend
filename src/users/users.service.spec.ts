@@ -31,7 +31,10 @@ describe('UsersService', () => {
       providers: [
         UsersService,
         { provide: getRepositoryToken(User), useValue: mockUserRepository },
-        { provide: getRepositoryToken(ConnectionRequest), useValue: mockConnectionRequestRepository },
+        {
+          provide: getRepositoryToken(ConnectionRequest),
+          useValue: mockConnectionRequestRepository,
+        },
       ],
     }).compile();
 
@@ -67,7 +70,9 @@ describe('UsersService', () => {
       } as any;
       mockUserRepository.findOne.mockResolvedValue(alreadySwitchedUser);
 
-      await expect(service.switchRole('u-2')).rejects.toThrow('Role switch privilege has already been used');
+      await expect(service.switchRole('u-2')).rejects.toThrow(
+        'Role switch privilege has already been used',
+      );
     });
   });
 });

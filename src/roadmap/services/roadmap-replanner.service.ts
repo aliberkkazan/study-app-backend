@@ -1,6 +1,12 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
-import { RoadmapVersion, RoadmapGenerationReason } from '../entities/roadmap-version.entity';
-import { RoadmapItem, RoadmapItemStatus } from '../entities/roadmap-item.entity';
+import {
+  RoadmapVersion,
+  RoadmapGenerationReason,
+} from '../entities/roadmap-version.entity';
+import {
+  RoadmapItem,
+  RoadmapItemStatus,
+} from '../entities/roadmap-item.entity';
 import { ReplanEvent } from '../entities/replan-event.entity';
 import { StudyProfile } from '../../study-profile/entities/study-profile.entity';
 
@@ -16,13 +22,21 @@ export class RoadmapReplannerService {
     const roadmap = currentVersion.roadmap;
     const now = new Date();
     const startDate = new Date(roadmap.startDate);
-    const targetExamDate = new Date(profile.targetExamDate || roadmap.targetExamDate);
+    const targetExamDate = new Date(
+      profile.targetExamDate || roadmap.targetExamDate,
+    );
 
     const diffFromStartMs = now.getTime() - startDate.getTime();
-    const currentWeekIndex = Math.max(1, Math.ceil(diffFromStartMs / (1000 * 60 * 60 * 24 * 7)));
+    const currentWeekIndex = Math.max(
+      1,
+      Math.ceil(diffFromStartMs / (1000 * 60 * 60 * 24 * 7)),
+    );
 
     const remainingMs = targetExamDate.getTime() - now.getTime();
-    const remainingWeeks = Math.max(1, Math.ceil(remainingMs / (1000 * 60 * 60 * 24 * 7)));
+    const remainingWeeks = Math.max(
+      1,
+      Math.ceil(remainingMs / (1000 * 60 * 60 * 24 * 7)),
+    );
     const totalWeeks = currentWeekIndex + remainingWeeks - 1;
 
     this.logger.log(
@@ -41,7 +55,9 @@ export class RoadmapReplannerService {
     }
 
     if (missedOrPendingItems.length === 0) {
-      throw new BadRequestException('All roadmap items are already completed; no replanning needed.');
+      throw new BadRequestException(
+        'All roadmap items are already completed; no replanning needed.',
+      );
     }
 
     const newVersion = new RoadmapVersion();
@@ -78,12 +94,17 @@ export class RoadmapReplannerService {
     let weekMinutesAccumulator = 0;
 
     for (const pending of missedOrPendingItems) {
-      if (weekMinutesAccumulator + pending.estimatedMinutes > weeklyMinutes && targetWeek < totalWeeks) {
+      if (
+        weekMinutesAccumulator + pending.estimatedMinutes > weeklyMinutes &&
+        targetWeek < totalWeeks
+      ) {
         targetWeek++;
         weekMinutesAccumulator = 0;
       }
 
-      const itemDate = new Date(startDate.getTime() + (targetWeek - 1) * 7 * 24 * 60 * 60 * 1000);
+      const itemDate = new Date(
+        startDate.getTime() + (targetWeek - 1) * 7 * 24 * 60 * 60 * 1000,
+      );
 
       const newItem = new RoadmapItem();
       newItem.roadmapVersion = newVersion;

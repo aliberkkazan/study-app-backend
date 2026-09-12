@@ -1,5 +1,18 @@
-import { Controller, Get, Post, Body, Param, Query, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { StudySessionsService } from './study-sessions.service';
 import { StartSessionDto } from './dto/start-session.dto';
 import { FinishSessionDto } from './dto/finish-session.dto';
@@ -18,13 +31,21 @@ export class StudySessionsController {
 
   @Post()
   @ApiOperation({ summary: 'Directly record a completed study session' })
-  record(@CurrentUser() user: User, @Body() recordSessionDto: RecordSessionDto) {
+  record(
+    @CurrentUser() user: User,
+    @Body() recordSessionDto: RecordSessionDto,
+  ) {
     return this.studySessionsService.record(user, recordSessionDto);
   }
 
   @Post('record')
-  @ApiOperation({ summary: 'Directly record a completed study session (alias)' })
-  recordAlias(@CurrentUser() user: User, @Body() recordSessionDto: RecordSessionDto) {
+  @ApiOperation({
+    summary: 'Directly record a completed study session (alias)',
+  })
+  recordAlias(
+    @CurrentUser() user: User,
+    @Body() recordSessionDto: RecordSessionDto,
+  ) {
     return this.studySessionsService.record(user, recordSessionDto);
   }
 
@@ -34,7 +55,11 @@ export class StudySessionsController {
   }
 
   @Post(':id/finish')
-  finish(@CurrentUser() user: User, @Param('id') id: string, @Body() finishSessionDto: FinishSessionDto) {
+  finish(
+    @CurrentUser() user: User,
+    @Param('id') id: string,
+    @Body() finishSessionDto: FinishSessionDto,
+  ) {
     return this.studySessionsService.finish(id, user.id, finishSessionDto);
   }
 
@@ -55,8 +80,14 @@ export class StudySessionsController {
   }
 
   @Get('progress')
-  @ApiOperation({ summary: 'Get aggregated study progress and analytics for current user' })
-  @ApiResponse({ status: 200, description: 'Aggregated progress stats', type: ProgressResponseDto })
+  @ApiOperation({
+    summary: 'Get aggregated study progress and analytics for current user',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Aggregated progress stats',
+    type: ProgressResponseDto,
+  })
   getProgress(@CurrentUser() user: User, @Query() query: GetProgressQueryDto) {
     return this.studySessionsService.getProgress(user.id, query);
   }

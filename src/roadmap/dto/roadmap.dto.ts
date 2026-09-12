@@ -1,14 +1,26 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsISO8601, IsNumber, IsOptional, IsString, IsUUID, Min } from 'class-validator';
+import {
+  IsEnum,
+  IsISO8601,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Min,
+} from 'class-validator';
 import { RoadmapItemStatus } from '../entities/roadmap-item.entity';
 
 export class GenerateRoadmapDto {
-  @ApiPropertyOptional({ description: 'Optional custom start date (defaults to today)' })
+  @ApiPropertyOptional({
+    description: 'Optional custom start date (defaults to today)',
+  })
   @IsOptional()
   @IsISO8601()
   startDate?: string;
 
-  @ApiPropertyOptional({ description: 'Optional override for weekly availability in minutes' })
+  @ApiPropertyOptional({
+    description: 'Optional override for weekly availability in minutes',
+  })
   @IsOptional()
   @IsNumber()
   @Min(60)
@@ -16,7 +28,10 @@ export class GenerateRoadmapDto {
 }
 
 export class ReplanRoadmapDto {
-  @ApiPropertyOptional({ example: 'Missed tasks from week 1-3 need redistributing', default: 'USER_TRIGGERED_REPLAN' })
+  @ApiPropertyOptional({
+    example: 'Missed tasks from week 1-3 need redistributing',
+    default: 'USER_TRIGGERED_REPLAN',
+  })
   @IsOptional()
   @IsString()
   reason?: string;

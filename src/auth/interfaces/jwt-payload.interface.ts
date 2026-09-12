@@ -5,4 +5,6 @@ export interface JwtPayload {
   name?: string;
   mentorCode?: string;
   hasSwitchedRole?: boolean;
+  tokenVersion?: number;
+  tokenType?: 'access' | 'refresh';
 }

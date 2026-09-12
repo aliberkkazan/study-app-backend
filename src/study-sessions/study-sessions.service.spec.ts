@@ -1,7 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { StudySessionsService } from './study-sessions.service';
-import { StudySession, StudySessionStatus } from './entities/study-session.entity';
+import {
+  StudySession,
+  StudySessionStatus,
+} from './entities/study-session.entity';
 import { StudyResult } from './entities/study-result.entity';
 import { Task } from '../tasks/entities/task.entity';
 import { TasksService } from '../tasks/tasks.service';
@@ -50,7 +53,10 @@ describe('StudySessionsService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         StudySessionsService,
-        { provide: getRepositoryToken(StudySession), useValue: mockSessionRepo },
+        {
+          provide: getRepositoryToken(StudySession),
+          useValue: mockSessionRepo,
+        },
         { provide: getRepositoryToken(StudyResult), useValue: mockResultRepo },
         { provide: getRepositoryToken(Task), useValue: mockTaskRepo },
         { provide: TasksService, useValue: mockTasksService },
@@ -119,14 +125,18 @@ describe('StudySessionsService', () => {
 
       // Subject breakdown
       expect(progress.subjectBreakdown.length).toBe(2);
-      const math = progress.subjectBreakdown.find((s) => s.subject === 'Mathematics');
+      const math = progress.subjectBreakdown.find(
+        (s) => s.subject === 'Mathematics',
+      );
       expect(math).toBeDefined();
       expect(math?.totalMinutes).toBe(105);
       expect(math?.sessionCount).toBe(2);
       expect(math?.correctCount).toBe(35);
       expect(math?.wrongCount).toBe(7);
 
-      const physics = progress.subjectBreakdown.find((s) => s.subject === 'Physics');
+      const physics = progress.subjectBreakdown.find(
+        (s) => s.subject === 'Physics',
+      );
       expect(physics).toBeDefined();
       expect(physics?.totalMinutes).toBe(90);
       expect(physics?.sessionCount).toBe(1);

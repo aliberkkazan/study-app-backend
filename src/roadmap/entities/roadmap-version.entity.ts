@@ -14,7 +14,9 @@ export enum RoadmapGenerationReason {
 @Entity('roadmap_version')
 export class RoadmapVersion extends BaseEntity {
   @ApiProperty({ type: () => Roadmap })
-  @ManyToOne(() => Roadmap, (roadmap) => roadmap.versions, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Roadmap, (roadmap) => roadmap.versions, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'roadmap_id' })
   roadmap: Roadmap;
 
@@ -29,7 +31,10 @@ export class RoadmapVersion extends BaseEntity {
   @Column({ name: 'is_current', default: true })
   isCurrent: boolean;
 
-  @ApiProperty({ enum: RoadmapGenerationReason, default: RoadmapGenerationReason.INITIAL })
+  @ApiProperty({
+    enum: RoadmapGenerationReason,
+    default: RoadmapGenerationReason.INITIAL,
+  })
   @Column({
     name: 'generated_reason',
     type: 'enum',
@@ -38,10 +43,15 @@ export class RoadmapVersion extends BaseEntity {
   })
   generatedReason: RoadmapGenerationReason;
 
-  @ApiProperty({ example: 36, description: 'Total weeks planned in this roadmap version' })
+  @ApiProperty({
+    example: 36,
+    description: 'Total weeks planned in this roadmap version',
+  })
   @Column({ name: 'total_weeks', type: 'int' })
   totalWeeks: number;
 
-  @OneToMany(() => RoadmapItem, (item) => item.roadmapVersion, { cascade: true })
+  @OneToMany(() => RoadmapItem, (item) => item.roadmapVersion, {
+    cascade: true,
+  })
   items: RoadmapItem[];
 }

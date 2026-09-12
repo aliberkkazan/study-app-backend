@@ -25,7 +25,12 @@ export class FinishSessionDto {
   @IsString()
   notes?: string;
 
-  @ApiProperty({ required: false, description: '1 to 5', minimum: 1, maximum: 5 })
+  @ApiProperty({
+    required: false,
+    description: '1 to 5',
+    minimum: 1,
+    maximum: 5,
+  })
   @IsOptional()
   @IsNumber()
   @Min(1)

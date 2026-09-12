@@ -45,10 +45,25 @@ describe('RoadmapService', () => {
         { provide: getRepositoryToken(RoadmapVersion), useValue: mockRepo },
         { provide: getRepositoryToken(RoadmapItem), useValue: mockRepo },
         { provide: getRepositoryToken(ReplanEvent), useValue: mockRepo },
-        { provide: StudyProfileService, useValue: { findProfile: jest.fn(), getProfile: jest.fn() } },
-        { provide: ExamPacksService, useValue: { getCurrentYksVersion: jest.fn(), getVersionHierarchy: jest.fn() } },
-        { provide: RoadmapGeneratorService, useValue: { generateRoadmapPlan: jest.fn() } },
-        { provide: RoadmapReplannerService, useValue: { replanCurrentRoadmap: jest.fn() } },
+        {
+          provide: StudyProfileService,
+          useValue: { findProfile: jest.fn(), getProfile: jest.fn() },
+        },
+        {
+          provide: ExamPacksService,
+          useValue: {
+            getCurrentYksVersion: jest.fn(),
+            getVersionHierarchy: jest.fn(),
+          },
+        },
+        {
+          provide: RoadmapGeneratorService,
+          useValue: { generateRoadmapPlan: jest.fn() },
+        },
+        {
+          provide: RoadmapReplannerService,
+          useValue: { replanCurrentRoadmap: jest.fn() },
+        },
         { provide: TasksService, useValue: { create: jest.fn() } },
         { provide: DataSource, useValue: mockDataSource },
       ],

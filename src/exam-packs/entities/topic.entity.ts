@@ -27,7 +27,10 @@ export class Topic extends BaseEntity {
   @Column({ name: 'estimated_hours', type: 'float', default: 4.0 })
   estimatedHours: number;
 
-  @ApiProperty({ example: 3, description: 'Importance weight (1 to 5) based on exam question frequency' })
+  @ApiProperty({
+    example: 3,
+    description: 'Importance weight (1 to 5) based on exam question frequency',
+  })
   @Column({ name: 'importance_weight', type: 'int', default: 3 })
   importanceWeight: number;
 
@@ -44,7 +47,9 @@ export class Topic extends BaseEntity {
   prerequisites: string[];
 
   @ApiProperty({ type: () => Subject })
-  @ManyToOne(() => Subject, (subject) => subject.topics, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Subject, (subject) => subject.topics, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'subject_id' })
   subject: Subject;
 

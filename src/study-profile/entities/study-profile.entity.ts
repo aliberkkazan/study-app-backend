@@ -56,7 +56,11 @@ export class StudyProfile extends BaseEntity {
   @Column({ name: 'target_score', type: 'float', nullable: true })
   targetScore?: number;
 
-  @ApiProperty({ example: 1180, required: false, description: 'Baseline or current diagnostic score' })
+  @ApiProperty({
+    example: 1180,
+    required: false,
+    description: 'Baseline or current diagnostic score',
+  })
   @Column({ name: 'current_score', type: 'float', nullable: true })
   currentScore?: number;
 

@@ -5,19 +5,19 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
  * DTO for sorting parameters
  */
 export class SortingDto {
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     example: 'created_at',
     description: 'Field to sort by',
-    default: 'created_at'
+    default: 'created_at',
   })
   @IsOptional()
   sortBy?: string = 'created_at';
 
-  @ApiPropertyOptional({ 
-    enum: ['ASC', 'DESC'], 
+  @ApiPropertyOptional({
+    enum: ['ASC', 'DESC'],
     default: 'DESC',
     description: 'Sort order (ascending or descending)',
-    example: 'DESC'
+    example: 'DESC',
   })
   @IsOptional()
   @IsIn(['ASC', 'DESC'])

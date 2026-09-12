@@ -23,7 +23,9 @@ export enum RoadmapItemStatus {
 @Index(['roadmapVersionId', 'targetWeekNumber'])
 export class RoadmapItem extends BaseEntity {
   @ApiProperty({ type: () => RoadmapVersion })
-  @ManyToOne(() => RoadmapVersion, (version) => version.items, { onDelete: 'CASCADE' })
+  @ManyToOne(() => RoadmapVersion, (version) => version.items, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'roadmap_version_id' })
   roadmapVersion: RoadmapVersion;
 
@@ -31,7 +33,11 @@ export class RoadmapItem extends BaseEntity {
   roadmapVersionId: string;
 
   @ApiProperty({ type: () => Subject, required: false })
-  @ManyToOne(() => Subject, { eager: true, nullable: true, onDelete: 'SET NULL' })
+  @ManyToOne(() => Subject, {
+    eager: true,
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
   @JoinColumn({ name: 'subject_id' })
   subject?: Subject;
 
@@ -54,7 +60,10 @@ export class RoadmapItem extends BaseEntity {
   })
   type: RoadmapItemType;
 
-  @ApiProperty({ example: 1, description: 'Week index relative to roadmap start' })
+  @ApiProperty({
+    example: 1,
+    description: 'Week index relative to roadmap start',
+  })
   @Column({ name: 'target_week_number', type: 'int' })
   targetWeekNumber: number;
 
@@ -62,7 +71,10 @@ export class RoadmapItem extends BaseEntity {
   @Column({ name: 'target_date', type: 'timestamptz', nullable: true })
   targetDate?: Date;
 
-  @ApiProperty({ example: 120, description: 'Estimated study duration in minutes' })
+  @ApiProperty({
+    example: 120,
+    description: 'Estimated study duration in minutes',
+  })
   @Column({ name: 'estimated_minutes', type: 'int', default: 120 })
   estimatedMinutes: number;
 

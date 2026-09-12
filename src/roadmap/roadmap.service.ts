@@ -15,7 +15,11 @@ import { StudyProfileService } from '../study-profile/study-profile.service';
 import { ExamPacksService } from '../exam-packs/exam-packs.service';
 import { RoadmapGeneratorService } from './services/roadmap-generator.service';
 import { RoadmapReplannerService } from './services/roadmap-replanner.service';
-import { GenerateRoadmapDto, ReplanRoadmapDto, UpdateRoadmapItemDto } from './dto/roadmap.dto';
+import {
+  GenerateRoadmapDto,
+  ReplanRoadmapDto,
+  UpdateRoadmapItemDto,
+} from './dto/roadmap.dto';
 import { TasksService } from '../tasks/tasks.service';
 import { User } from '../users/entities/user.entity';
 
@@ -51,7 +55,9 @@ export class RoadmapService {
     let examVersion = profile.targetExamVersion;
     if (!examVersion || !examVersion.sections) {
       if (profile.targetExamVersionId) {
-        examVersion = await this.examPacksService.getVersionHierarchy(profile.targetExamVersionId);
+        examVersion = await this.examPacksService.getVersionHierarchy(
+          profile.targetExamVersionId,
+        );
       } else {
         examVersion = await this.examPacksService.getCurrentYksVersion();
       }
@@ -90,7 +96,10 @@ export class RoadmapService {
 
       version.roadmap = savedRoadmap;
       version.roadmapId = savedRoadmap.id;
-      const savedVersion = await queryRunner.manager.save(RoadmapVersion, version);
+      const savedVersion = await queryRunner.manager.save(
+        RoadmapVersion,
+        version,
+      );
 
       for (const item of items) {
         item.roadmapVersion = savedVersion;
@@ -104,7 +113,8 @@ export class RoadmapService {
       return this.getCurrentRoadmap(user.id);
     } catch (err: unknown) {
       await queryRunner.rollbackTransaction();
-      const message = err instanceof Error ? err.message : 'Failed to generate roadmap';
+      const message =
+        err instanceof Error ? err.message : 'Failed to generate roadmap';
       this.logger.error(`Error generating roadmap: ${message}`);
       throw err;
     } finally {
@@ -141,7 +151,9 @@ export class RoadmapService {
             if (a.targetWeekNumber !== b.targetWeekNumber) {
               return a.targetWeekNumber - b.targetWeekNumber;
             }
-            return (a.targetDate?.getTime() || 0) - (b.targetDate?.getTime() || 0);
+            return (
+              (a.targetDate?.getTime() || 0) - (b.targetDate?.getTime() || 0)
+            );
           });
         }
       }
@@ -176,11 +188,12 @@ export class RoadmapService {
     const profile = await this.studyProfileService.getProfile(user.id);
 
     currentVersion.roadmap = currentRoadmap;
-    const { newVersion, replanEvent } = this.replannerService.replanCurrentRoadmap(
-      currentVersion,
-      profile,
-      dto.reason,
-    );
+    const { newVersion, replanEvent } =
+      this.replannerService.replanCurrentRoadmap(
+        currentVersion,
+        profile,
+        dto.reason,
+      );
 
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -195,7 +208,10 @@ export class RoadmapService {
 
       newVersion.roadmap = currentRoadmap;
       newVersion.roadmapId = currentRoadmap.id;
-      const savedNewVersion = await queryRunner.manager.save(RoadmapVersion, newVersion);
+      const savedNewVersion = await queryRunner.manager.save(
+        RoadmapVersion,
+        newVersion,
+      );
 
       for (const item of newVersion.items) {
         item.roadmapVersion = savedNewVersion;
@@ -215,7 +231,8 @@ export class RoadmapService {
       return this.getCurrentRoadmap(user.id);
     } catch (err: unknown) {
       await queryRunner.rollbackTransaction();
-      const message = err instanceof Error ? err.message : 'Failed to replan roadmap';
+      const message =
+        err instanceof Error ? err.message : 'Failed to replan roadmap';
       this.logger.error(`Error replanning roadmap: ${message}`);
       throw err;
     } finally {
@@ -238,15 +255,20 @@ export class RoadmapService {
     });
 
     if (!item) {
-      throw new NotFoundException(`Roadmap item with ID "${itemId}" not found.`);
+      throw new NotFoundException(
+        `Roadmap item with ID "${itemId}" not found.`,
+      );
     }
 
     if (item.roadmapVersion.roadmap.userId !== userId) {
-      throw new ForbiddenException('You do not have permission to modify this roadmap item.');
+      throw new ForbiddenException(
+        'You do not have permission to modify this roadmap item.',
+      );
     }
 
     if (dto.status !== undefined) item.status = dto.status;
-    if (dto.estimatedMinutes !== undefined) item.estimatedMinutes = dto.estimatedMinutes;
+    if (dto.estimatedMinutes !== undefined)
+      item.estimatedMinutes = dto.estimatedMinutes;
     if (dto.linkedTaskId !== undefined) item.linkedTaskId = dto.linkedTaskId;
 
     return this.itemRepo.save(item);
@@ -265,11 +287,15 @@ export class RoadmapService {
     });
 
     if (!item) {
-      throw new NotFoundException(`Roadmap item with ID "${itemId}" not found.`);
+      throw new NotFoundException(
+        `Roadmap item with ID "${itemId}" not found.`,
+      );
     }
 
     if (item.roadmapVersion.roadmap.userId !== user.id) {
-      throw new ForbiddenException('You do not have permission to convert this item.');
+      throw new ForbiddenException(
+        'You do not have permission to convert this item.',
+      );
     }
 
     const task = await this.tasksService.create(user, {
@@ -278,7 +304,9 @@ export class RoadmapService {
       subject: item.subject?.name,
       topic: item.topic?.name,
       targetOutcome: item.targetOutcome,
-      scheduledDate: item.targetDate ? item.targetDate.toISOString() : undefined,
+      scheduledDate: item.targetDate
+        ? item.targetDate.toISOString()
+        : undefined,
     });
 
     item.linkedTaskId = task.id;

@@ -92,7 +92,7 @@ export class ProgressResponseDto {
   @ApiProperty({ example: 8 })
   completedSessionsCount: number;
 
-  @ApiProperty({ example: 5, description: "Consecutive study days streak" })
+  @ApiProperty({ example: 5, description: 'Consecutive study days streak' })
   streakDays: number;
 
   @ApiProperty({ type: TaskStatsDto })

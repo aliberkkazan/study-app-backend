@@ -1,4 +1,9 @@
-import { Injectable, Logger, OnModuleInit, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  OnModuleInit,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Country } from './entities/country.entity';
@@ -57,11 +62,15 @@ export class ExamPacksService implements OnModuleInit {
         });
 
         if (existingExam) {
-          this.logger.log(`Exam pack for ${examData.code} already initialized.`);
+          this.logger.log(
+            `Exam pack for ${examData.code} already initialized.`,
+          );
           continue;
         }
 
-        this.logger.log(`Seeding official exam pack data for ${examData.code}...`);
+        this.logger.log(
+          `Seeding official exam pack data for ${examData.code}...`,
+        );
 
         let country = await this.countryRepo.findOne({
           where: { code: packData.code },
@@ -175,7 +184,9 @@ export class ExamPacksService implements OnModuleInit {
           }
         }
 
-        this.logger.log(`Exam pack ${examData.code} seed completed successfully.`);
+        this.logger.log(
+          `Exam pack ${examData.code} seed completed successfully.`,
+        );
       }
     }
   }
@@ -248,7 +259,9 @@ export class ExamPacksService implements OnModuleInit {
     });
 
     if (!version) {
-      throw new NotFoundException(`Exam version with ID "${versionId}" not found.`);
+      throw new NotFoundException(
+        `Exam version with ID "${versionId}" not found.`,
+      );
     }
 
     return version;

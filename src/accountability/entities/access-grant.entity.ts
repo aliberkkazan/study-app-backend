@@ -27,7 +27,10 @@ export interface GrantPermissions {
 
 @Entity('access_grant')
 export class AccessGrant extends BaseEntity {
-  @ApiProperty({ type: () => User, description: 'Student or resource owner sharing access' })
+  @ApiProperty({
+    type: () => User,
+    description: 'Student or resource owner sharing access',
+  })
   @ManyToOne(() => User, { eager: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'granter_id' })
   granter: User;
@@ -35,7 +38,11 @@ export class AccessGrant extends BaseEntity {
   @Column({ name: 'granter_id' })
   granterId: string;
 
-  @ApiProperty({ type: () => User, required: false, description: 'Grantee who accepted access' })
+  @ApiProperty({
+    type: () => User,
+    required: false,
+    description: 'Grantee who accepted access',
+  })
   @ManyToOne(() => User, { eager: true, nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'grantee_id' })
   grantee?: User;
@@ -59,7 +66,10 @@ export class AccessGrant extends BaseEntity {
   })
   status: AccessGrantStatus;
 
-  @ApiProperty({ example: 'AG-98F12A', description: 'Unique invite code to accept the grant' })
+  @ApiProperty({
+    example: 'AG-98F12A',
+    description: 'Unique invite code to accept the grant',
+  })
   @Column({ name: 'invite_code', unique: true })
   inviteCode: string;
 

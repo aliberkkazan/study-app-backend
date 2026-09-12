@@ -17,7 +17,8 @@ export const SAT_EXAM_PACK_DATA: SeedCountry = {
           code: 'SAT',
           name: 'Digital SAT',
           nativeName: 'College Board Digital Scholastic Assessment Test (SAT)',
-          description: 'Official College Board Digital SAT Suite for undergraduate university admissions.',
+          description:
+            'Official College Board Digital SAT Suite for undergraduate university admissions.',
           versions: [
             {
               version: '2026-Digital',
@@ -33,7 +34,8 @@ export const SAT_EXAM_PACK_DATA: SeedCountry = {
                   code: 'SAT_RW',
                   name: 'Reading and Writing',
                   orderIndex: 1,
-                  description: 'Digital SAT Reading and Writing Section (Craft & Structure, Information & Ideas, Standard English Conventions, Expression of Ideas).',
+                  description:
+                    'Digital SAT Reading and Writing Section (Craft & Structure, Information & Ideas, Standard English Conventions, Expression of Ideas).',
                   subjects: [
                     {
                       code: 'SAT_RW_CRAFT_STRUCTURE',
@@ -177,7 +179,8 @@ export const SAT_EXAM_PACK_DATA: SeedCountry = {
                   code: 'SAT_MATH',
                   name: 'Math',
                   orderIndex: 2,
-                  description: 'Digital SAT Math Section (Algebra, Advanced Math, Problem-Solving and Data Analysis, Geometry and Trigonometry with Built-in Desmos Calculator).',
+                  description:
+                    'Digital SAT Math Section (Algebra, Advanced Math, Problem-Solving and Data Analysis, Geometry and Trigonometry with Built-in Desmos Calculator).',
                   subjects: [
                     {
                       code: 'SAT_MATH_ALGEBRA',

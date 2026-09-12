@@ -3,7 +3,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { StudyProfile, StudyTrack } from './entities/study-profile.entity';
 import { DiagnosticResult } from './entities/diagnostic-result.entity';
-import { CreateStudyProfileDto, UpdateStudyProfileDto } from './dto/study-profile.dto';
+import {
+  CreateStudyProfileDto,
+  UpdateStudyProfileDto,
+} from './dto/study-profile.dto';
 import { CreateDiagnosticResultDto } from './dto/diagnostic-result.dto';
 
 @Injectable()
@@ -37,7 +40,7 @@ export class StudyProfileService {
         targetExamDate: defaultDate,
         targetRank: 10000,
         weeklyAvailabilityMinutes: 1200,
-        timezone: "Europe/Istanbul",
+        timezone: 'Europe/Istanbul',
       });
       profile = await this.profileRepo.save(profile);
     }
@@ -56,7 +59,10 @@ export class StudyProfileService {
     });
   }
 
-  async createOrUpdateProfile(userId: string, dto: CreateStudyProfileDto): Promise<StudyProfile> {
+  async createOrUpdateProfile(
+    userId: string,
+    dto: CreateStudyProfileDto,
+  ): Promise<StudyProfile> {
     let profile = await this.profileRepo.findOne({ where: { userId } });
 
     if (!profile) {
@@ -78,32 +84,45 @@ export class StudyProfileService {
       profile.targetExamDate = new Date(dto.targetExamDate);
       if (dto.targetScore !== undefined) profile.targetScore = dto.targetScore;
       if (dto.targetRank !== undefined) profile.targetRank = dto.targetRank;
-      if (dto.weeklyAvailabilityMinutes !== undefined) profile.weeklyAvailabilityMinutes = dto.weeklyAvailabilityMinutes;
-      if (dto.dailyAvailability !== undefined) profile.dailyAvailability = dto.dailyAvailability;
-      if (dto.currentLevel !== undefined) profile.currentLevel = dto.currentLevel;
+      if (dto.weeklyAvailabilityMinutes !== undefined)
+        profile.weeklyAvailabilityMinutes = dto.weeklyAvailabilityMinutes;
+      if (dto.dailyAvailability !== undefined)
+        profile.dailyAvailability = dto.dailyAvailability;
+      if (dto.currentLevel !== undefined)
+        profile.currentLevel = dto.currentLevel;
       if (dto.timezone !== undefined) profile.timezone = dto.timezone;
     }
 
     return this.profileRepo.save(profile);
   }
 
-  async updateProfile(userId: string, dto: UpdateStudyProfileDto): Promise<StudyProfile> {
+  async updateProfile(
+    userId: string,
+    dto: UpdateStudyProfileDto,
+  ): Promise<StudyProfile> {
     const profile = await this.getProfile(userId);
 
-    if (dto.targetExamVersionId !== undefined) profile.targetExamVersionId = dto.targetExamVersionId;
+    if (dto.targetExamVersionId !== undefined)
+      profile.targetExamVersionId = dto.targetExamVersionId;
     if (dto.track !== undefined) profile.track = dto.track;
-    if (dto.targetExamDate !== undefined) profile.targetExamDate = new Date(dto.targetExamDate);
+    if (dto.targetExamDate !== undefined)
+      profile.targetExamDate = new Date(dto.targetExamDate);
     if (dto.targetScore !== undefined) profile.targetScore = dto.targetScore;
     if (dto.targetRank !== undefined) profile.targetRank = dto.targetRank;
-    if (dto.weeklyAvailabilityMinutes !== undefined) profile.weeklyAvailabilityMinutes = dto.weeklyAvailabilityMinutes;
-    if (dto.dailyAvailability !== undefined) profile.dailyAvailability = dto.dailyAvailability;
+    if (dto.weeklyAvailabilityMinutes !== undefined)
+      profile.weeklyAvailabilityMinutes = dto.weeklyAvailabilityMinutes;
+    if (dto.dailyAvailability !== undefined)
+      profile.dailyAvailability = dto.dailyAvailability;
     if (dto.currentLevel !== undefined) profile.currentLevel = dto.currentLevel;
     if (dto.timezone !== undefined) profile.timezone = dto.timezone;
 
     return this.profileRepo.save(profile);
   }
 
-  async addDiagnosticResult(userId: string, dto: CreateDiagnosticResultDto): Promise<DiagnosticResult> {
+  async addDiagnosticResult(
+    userId: string,
+    dto: CreateDiagnosticResultDto,
+  ): Promise<DiagnosticResult> {
     const diagnostic = this.diagnosticRepo.create({
       userId,
       examVersionId: dto.examVersionId,

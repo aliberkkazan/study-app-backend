@@ -27,7 +27,10 @@ export class StudySession extends BaseEntity {
   })
   status: StudySessionStatus;
 
-  @ApiProperty({ enum: SessionVerificationStatus, default: SessionVerificationStatus.UNVERIFIED })
+  @ApiProperty({
+    enum: SessionVerificationStatus,
+    default: SessionVerificationStatus.UNVERIFIED,
+  })
   @Column({
     name: 'verification_status',
     type: 'enum',
@@ -44,7 +47,10 @@ export class StudySession extends BaseEntity {
   @Column({ name: 'verified_by', nullable: true })
   verifiedById?: string;
 
-  @ApiProperty({ example: 'Great focus on difficult problem sets!', required: false })
+  @ApiProperty({
+    example: 'Great focus on difficult problem sets!',
+    required: false,
+  })
   @Column({ name: 'mentor_feedback', type: 'text', nullable: true })
   mentorFeedback?: string;
 
@@ -79,6 +85,10 @@ export class StudySession extends BaseEntity {
   task: Task;
 
   @ApiProperty({ type: () => StudyResult, required: false })
-  @OneToOne(() => StudyResult, result => result.session, { cascade: true, eager: true, nullable: true })
+  @OneToOne(() => StudyResult, (result) => result.session, {
+    cascade: true,
+    eager: true,
+    nullable: true,
+  })
   result: StudyResult;
 }

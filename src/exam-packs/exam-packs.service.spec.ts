@@ -50,7 +50,10 @@ describe('ExamPacksService', () => {
   });
 
   it('should get all exam packs without filter', async () => {
-    const mockExams = [{ id: '1', code: 'YKS' }, { id: '2', code: 'SAT' }];
+    const mockExams = [
+      { id: '1', code: 'YKS' },
+      { id: '2', code: 'SAT' },
+    ];
     mockQueryBuilder.getMany.mockResolvedValueOnce(mockExams);
 
     const result = await service.getAllExamPacks();

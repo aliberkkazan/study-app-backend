@@ -43,6 +43,14 @@ export class User extends BaseEntity {
   @Column({ name: 'has_switched_role', type: 'boolean', default: false })
   hasSwitchedRole: boolean;
 
+  @Exclude()
+  @Column({ name: 'token_version', type: 'int', default: 0 })
+  tokenVersion: number;
+
+  @Exclude()
+  @Column({ name: 'hashed_refresh_token', type: 'text', nullable: true })
+  hashedRefreshToken: string | null;
+
   @ManyToMany(() => User, (user) => user.mentors)
   @JoinTable({
     name: 'user_students',

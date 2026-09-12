@@ -1,10 +1,17 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { RoadmapGeneratorService } from './roadmap-generator.service';
 import { Roadmap } from '../entities/roadmap.entity';
-import { StudyProfile, StudyTrack, UserSkillLevel } from '../../study-profile/entities/study-profile.entity';
+import {
+  StudyProfile,
+  StudyTrack,
+  UserSkillLevel,
+} from '../../study-profile/entities/study-profile.entity';
 import { ExamVersion } from '../../exam-packs/entities/exam-version.entity';
 import { ExamSection } from '../../exam-packs/entities/exam-section.entity';
-import { Subject, SubjectCategory } from '../../exam-packs/entities/subject.entity';
+import {
+  Subject,
+  SubjectCategory,
+} from '../../exam-packs/entities/subject.entity';
 import { Topic, TopicDifficulty } from '../../exam-packs/entities/topic.entity';
 import { RoadmapItemType } from '../entities/roadmap-item.entity';
 
@@ -134,7 +141,9 @@ describe('SAT Roadmap Generation & Timezone Support', () => {
     mockProfile.timezone = 'America/New_York';
     mockProfile.currentScore = 1180;
     mockProfile.targetScore = 1500;
-    mockProfile.targetExamDate = new Date(Date.now() + 16 * 7 * 24 * 60 * 60 * 1000);
+    mockProfile.targetExamDate = new Date(
+      Date.now() + 16 * 7 * 24 * 60 * 60 * 1000,
+    );
 
     const startDate = new Date();
     const result = service.generateRoadmapPlan(
@@ -149,12 +158,16 @@ describe('SAT Roadmap Generation & Timezone Support', () => {
     expect(result.items.length).toBeGreaterThan(0);
 
     // Verify simulate outcome contains Bluebook practice test
-    const simulateItem = result.items.find((i) => i.type === RoadmapItemType.SIMULATE);
+    const simulateItem = result.items.find(
+      (i) => i.type === RoadmapItemType.SIMULATE,
+    );
     expect(simulateItem).toBeDefined();
     expect(simulateItem?.targetOutcome).toContain('Bluebook');
 
     // Verify learn outcome has SAT format
-    const learnItem = result.items.find((i) => i.type === RoadmapItemType.LEARN);
+    const learnItem = result.items.find(
+      (i) => i.type === RoadmapItemType.LEARN,
+    );
     expect(learnItem?.targetOutcome).toContain('Concept Mastery');
   });
 
@@ -169,7 +182,9 @@ describe('SAT Roadmap Generation & Timezone Support', () => {
     mockProfile.timezone = 'America/Los_Angeles';
     mockProfile.currentScore = 1250;
     mockProfile.targetScore = 1520;
-    mockProfile.targetExamDate = new Date(Date.now() + 12 * 7 * 24 * 60 * 60 * 1000);
+    mockProfile.targetExamDate = new Date(
+      Date.now() + 12 * 7 * 24 * 60 * 60 * 1000,
+    );
 
     const result = service.generateRoadmapPlan(
       mockRoadmap,
@@ -178,7 +193,9 @@ describe('SAT Roadmap Generation & Timezone Support', () => {
       new Date(),
     );
 
-    expect(result.items.some((i) => i.subjectId === 'sat-sub-math-1')).toBe(true);
+    expect(result.items.some((i) => i.subjectId === 'sat-sub-math-1')).toBe(
+      true,
+    );
   });
 
   it('should handle US Timezone (America/Chicago) calculations safely without invalid dates', () => {

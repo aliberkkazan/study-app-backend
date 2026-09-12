@@ -6,7 +6,9 @@ import { Roadmap } from './roadmap.entity';
 @Entity('replan_event')
 export class ReplanEvent extends BaseEntity {
   @ApiProperty({ type: () => Roadmap })
-  @ManyToOne(() => Roadmap, (roadmap) => roadmap.replanEvents, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Roadmap, (roadmap) => roadmap.replanEvents, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'roadmap_id' })
   roadmap: Roadmap;
 

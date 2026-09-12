@@ -1,7 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { StudyProfileService } from './study-profile.service';
-import { StudyProfile, StudyTrack, UserSkillLevel } from './entities/study-profile.entity';
+import {
+  StudyProfile,
+  StudyTrack,
+  UserSkillLevel,
+} from './entities/study-profile.entity';
 import { DiagnosticResult } from './entities/diagnostic-result.entity';
 
 describe('StudyProfileService', () => {
@@ -10,7 +14,9 @@ describe('StudyProfileService', () => {
   const mockProfileRepo = {
     findOne: jest.fn(),
     create: jest.fn((dto) => ({ id: 'profile-uuid', ...dto })),
-    save: jest.fn((entity) => Promise.resolve({ id: 'profile-uuid', ...entity })),
+    save: jest.fn((entity) =>
+      Promise.resolve({ id: 'profile-uuid', ...entity }),
+    ),
   };
 
   const mockDiagnosticRepo = {
@@ -23,8 +29,14 @@ describe('StudyProfileService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         StudyProfileService,
-        { provide: getRepositoryToken(StudyProfile), useValue: mockProfileRepo },
-        { provide: getRepositoryToken(DiagnosticResult), useValue: mockDiagnosticRepo },
+        {
+          provide: getRepositoryToken(StudyProfile),
+          useValue: mockProfileRepo,
+        },
+        {
+          provide: getRepositoryToken(DiagnosticResult),
+          useValue: mockDiagnosticRepo,
+        },
       ],
     }).compile();
 

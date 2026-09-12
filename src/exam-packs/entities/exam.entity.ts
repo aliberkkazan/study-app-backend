@@ -18,12 +18,16 @@ export class Exam extends BaseEntity {
   @Column({ name: 'native_name', nullable: true })
   nativeName: string;
 
-  @ApiProperty({ example: 'National university entrance examination in Turkey.' })
+  @ApiProperty({
+    example: 'National university entrance examination in Turkey.',
+  })
   @Column({ type: 'text', nullable: true })
   description: string;
 
   @ApiProperty({ type: () => EducationSystem })
-  @ManyToOne(() => EducationSystem, (system) => system.exams, { onDelete: 'CASCADE' })
+  @ManyToOne(() => EducationSystem, (system) => system.exams, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'education_system_id' })
   educationSystem: EducationSystem;
 

@@ -30,7 +30,10 @@ export class CreateStudyProfileDto {
   @IsNumber()
   targetScore?: number;
 
-  @ApiPropertyOptional({ example: 1180, description: 'Baseline or current diagnostic score' })
+  @ApiPropertyOptional({
+    example: 1180,
+    description: 'Baseline or current diagnostic score',
+  })
   @IsOptional()
   @IsNumber()
   currentScore?: number;
@@ -40,7 +43,10 @@ export class CreateStudyProfileDto {
   @IsNumber()
   targetRank?: number;
 
-  @ApiPropertyOptional({ example: 1200, description: 'Weekly availability in minutes (e.g. 1200 = 20 hours)' })
+  @ApiPropertyOptional({
+    example: 1200,
+    description: 'Weekly availability in minutes (e.g. 1200 = 20 hours)',
+  })
   @IsOptional()
   @IsNumber()
   @Min(60)
@@ -62,12 +68,18 @@ export class CreateStudyProfileDto {
   @IsObject()
   dailyAvailability?: Record<string, number>;
 
-  @ApiPropertyOptional({ enum: UserSkillLevel, default: UserSkillLevel.INTERMEDIATE })
+  @ApiPropertyOptional({
+    enum: UserSkillLevel,
+    default: UserSkillLevel.INTERMEDIATE,
+  })
   @IsOptional()
   @IsEnum(UserSkillLevel)
   currentLevel?: UserSkillLevel;
 
-  @ApiPropertyOptional({ example: 'Europe/Istanbul', default: 'Europe/Istanbul' })
+  @ApiPropertyOptional({
+    example: 'Europe/Istanbul',
+    default: 'Europe/Istanbul',
+  })
   @IsOptional()
   @IsString()
   timezone?: string;

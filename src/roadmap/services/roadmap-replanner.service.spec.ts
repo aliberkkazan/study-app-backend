@@ -2,8 +2,15 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { RoadmapReplannerService } from './roadmap-replanner.service';
 import { Roadmap } from '../entities/roadmap.entity';
 import { RoadmapVersion } from '../entities/roadmap-version.entity';
-import { RoadmapItem, RoadmapItemStatus, RoadmapItemType } from '../entities/roadmap-item.entity';
-import { StudyProfile, StudyTrack } from '../../study-profile/entities/study-profile.entity';
+import {
+  RoadmapItem,
+  RoadmapItemStatus,
+  RoadmapItemType,
+} from '../entities/roadmap-item.entity';
+import {
+  StudyProfile,
+  StudyTrack,
+} from '../../study-profile/entities/study-profile.entity';
 
 describe('RoadmapReplannerService', () => {
   let service: RoadmapReplannerService;
@@ -24,7 +31,9 @@ describe('RoadmapReplannerService', () => {
     const mockRoadmap = new Roadmap();
     mockRoadmap.id = 'roadmap-1';
     mockRoadmap.startDate = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000); // started 2 weeks ago
-    mockRoadmap.targetExamDate = new Date(Date.now() + 20 * 7 * 24 * 60 * 60 * 1000);
+    mockRoadmap.targetExamDate = new Date(
+      Date.now() + 20 * 7 * 24 * 60 * 60 * 1000,
+    );
 
     const mockProfile = new StudyProfile();
     mockProfile.track = StudyTrack.SAYISAL;
@@ -75,7 +84,11 @@ describe('RoadmapReplannerService', () => {
       updated_at: new Date(),
     };
 
-    const result = service.replanCurrentRoadmap(currentVersion, mockProfile, 'MISSED_TASKS');
+    const result = service.replanCurrentRoadmap(
+      currentVersion,
+      mockProfile,
+      'MISSED_TASKS',
+    );
     expect(result).toBeDefined();
     expect(result.newVersion.versionNumber).toBe(2);
     expect(result.replanEvent).toBeDefined();

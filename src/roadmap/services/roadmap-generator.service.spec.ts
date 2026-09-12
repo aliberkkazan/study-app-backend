@@ -1,10 +1,17 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { RoadmapGeneratorService } from './roadmap-generator.service';
 import { Roadmap } from '../entities/roadmap.entity';
-import { StudyProfile, StudyTrack, UserSkillLevel } from '../../study-profile/entities/study-profile.entity';
+import {
+  StudyProfile,
+  StudyTrack,
+  UserSkillLevel,
+} from '../../study-profile/entities/study-profile.entity';
 import { ExamVersion } from '../../exam-packs/entities/exam-version.entity';
 import { ExamSection } from '../../exam-packs/entities/exam-section.entity';
-import { Subject, SubjectCategory } from '../../exam-packs/entities/subject.entity';
+import {
+  Subject,
+  SubjectCategory,
+} from '../../exam-packs/entities/subject.entity';
 import { Topic, TopicDifficulty } from '../../exam-packs/entities/topic.entity';
 import { RoadmapItemType } from '../entities/roadmap-item.entity';
 
@@ -31,7 +38,9 @@ describe('RoadmapGeneratorService', () => {
     mockProfile.track = StudyTrack.SAYISAL;
     mockProfile.weeklyAvailabilityMinutes = 1200;
     mockProfile.currentLevel = UserSkillLevel.INTERMEDIATE;
-    mockProfile.targetExamDate = new Date(Date.now() + 20 * 7 * 24 * 60 * 60 * 1000); // 20 weeks ahead
+    mockProfile.targetExamDate = new Date(
+      Date.now() + 20 * 7 * 24 * 60 * 60 * 1000,
+    ); // 20 weeks ahead
 
     const mockTopic1: Topic = {
       id: 'top-1',
@@ -104,9 +113,17 @@ describe('RoadmapGeneratorService', () => {
     expect(result).toBeDefined();
     expect(result.version).toBeDefined();
     expect(result.items.length).toBeGreaterThan(0);
-    expect(result.items.some((i) => i.type === RoadmapItemType.LEARN)).toBe(true);
-    expect(result.items.some((i) => i.type === RoadmapItemType.PRACTICE)).toBe(true);
-    expect(result.items.some((i) => i.type === RoadmapItemType.REVIEW)).toBe(true);
-    expect(result.items.some((i) => i.type === RoadmapItemType.SIMULATE)).toBe(true);
+    expect(result.items.some((i) => i.type === RoadmapItemType.LEARN)).toBe(
+      true,
+    );
+    expect(result.items.some((i) => i.type === RoadmapItemType.PRACTICE)).toBe(
+      true,
+    );
+    expect(result.items.some((i) => i.type === RoadmapItemType.REVIEW)).toBe(
+      true,
+    );
+    expect(result.items.some((i) => i.type === RoadmapItemType.SIMULATE)).toBe(
+      true,
+    );
   });
 });

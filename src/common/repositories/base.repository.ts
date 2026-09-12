@@ -1,4 +1,11 @@
-import { Repository, FindOptionsWhere, FindManyOptions, Between, MoreThanOrEqual, LessThanOrEqual } from 'typeorm';
+import {
+  Repository,
+  FindOptionsWhere,
+  FindManyOptions,
+  Between,
+  MoreThanOrEqual,
+  LessThanOrEqual,
+} from 'typeorm';
 import { BaseEntity } from '../entities/base.entity';
 import { BaseFilterDto } from '../dto/base-filter.dto';
 
@@ -52,13 +59,13 @@ export class BaseRepository<T extends BaseEntity> extends Repository<T> {
     filters: BaseFilterDto,
     additionalWhere?: FindOptionsWhere<T>,
   ): Promise<PaginatedResponse<T>> {
-    const { 
-      page = 1, 
-      limit = 10, 
-      sortBy = 'created_at', 
-      sortOrder = 'DESC', 
-      startDate, 
-      endDate 
+    const {
+      page = 1,
+      limit = 10,
+      sortBy = 'created_at',
+      sortOrder = 'DESC',
+      startDate,
+      endDate,
     } = filters;
 
     const where: any = {

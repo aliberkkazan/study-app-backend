@@ -21,7 +21,7 @@ export class StudyResult extends BaseEntity {
   @Column({ name: 'focus_quality', nullable: true })
   focusQuality: number;
 
-  @OneToOne(() => StudySession, session => session.result)
+  @OneToOne(() => StudySession, (session) => session.result)
   @JoinColumn({ name: 'session_id' })
   session: StudySession;
 }

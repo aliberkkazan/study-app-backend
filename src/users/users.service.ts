@@ -1,10 +1,20 @@
-import { Injectable, ConflictException, NotFoundException, BadRequestException, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+  BadRequestException,
+  UnauthorizedException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User, UserRole } from './entities/user.entity';
-import { ConnectionRequest, RequestStatus } from './entities/connection-request.entity';
+import {
+  ConnectionRequest,
+  RequestStatus,
+} from './entities/connection-request.entity';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 
@@ -15,10 +25,12 @@ export class UsersService {
     private usersRepository: Repository<User>,
     @InjectRepository(ConnectionRequest)
     private requestRepository: Repository<ConnectionRequest>,
-  ) { }
+  ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
-    const existingUser = await this.usersRepository.findOneBy({ email: createUserDto.email });
+    const existingUser = await this.usersRepository.findOneBy({
+      email: createUserDto.email,
+    });
     if (existingUser) {
       throw new ConflictException('Email already exists');
     }
@@ -35,9 +47,31 @@ export class UsersService {
       ...createUserDto,
       password: hashedPassword,
       mentorCode,
+      tokenVersion: 0,
+      hashedRefreshToken: null,
     });
 
     return this.usersRepository.save(user);
+  }
+
+  async updateRefreshToken(
+    userId: string,
+    hashedRefreshToken: string | null,
+  ): Promise<void> {
+    await this.usersRepository.update(userId, { hashedRefreshToken });
+  }
+
+  async revokeAllUserSessions(userId: string): Promise<void> {
+    const user = await this.usersRepository.findOneBy({ id: userId });
+    if (user) {
+      user.tokenVersion = (user.tokenVersion || 0) + 1;
+      user.hashedRefreshToken = null;
+      await this.usersRepository.save(user);
+    }
+  }
+
+  async findOneWithRefreshToken(id: string): Promise<User | null> {
+    return this.usersRepository.findOne({ where: { id } });
   }
 
   async findOneByEmail(email: string): Promise<User | null> {
@@ -45,7 +79,10 @@ export class UsersService {
   }
 
   async findOne(id: string): Promise<User | null> {
-    const user = await this.usersRepository.findOne({ where: { id }, relations: ['mentors', 'students'] });
+    const user = await this.usersRepository.findOne({
+      where: { id },
+      relations: ['mentors', 'students'],
+    });
     if (user && user.role === UserRole.MENTOR && !user.mentorCode) {
       user.mentorCode = this.generateMentorCode();
       await this.usersRepository.save(user);
@@ -61,14 +98,19 @@ export class UsersService {
     }
 
     if (mentorId) {
-      query.innerJoin('user.mentors', 'mentor', 'mentor.id = :mentorId', { mentorId });
+      query.innerJoin('user.mentors', 'mentor', 'mentor.id = :mentorId', {
+        mentorId,
+      });
     }
 
     return query.getMany();
   }
 
   async assignStudent(mentorId: string, studentId: string): Promise<User> {
-    const mentor = await this.usersRepository.findOne({ where: { id: mentorId }, relations: ['students'] });
+    const mentor = await this.usersRepository.findOne({
+      where: { id: mentorId },
+      relations: ['students'],
+    });
     const student = await this.usersRepository.findOneBy({ id: studentId });
 
     if (!mentor) {
@@ -78,7 +120,7 @@ export class UsersService {
       throw new NotFoundException(`Student with ID ${studentId} not found`);
     }
 
-    const isAssigned = mentor.students.some(s => s.id === studentId);
+    const isAssigned = mentor.students.some((s) => s.id === studentId);
     if (!isAssigned) {
       mentor.students.push(student);
       await this.usersRepository.save(mentor);
@@ -88,16 +130,22 @@ export class UsersService {
   }
 
   async switchRole(userId: string): Promise<User> {
-    const user = await this.usersRepository.findOne({ where: { id: userId }, relations: ['mentors', 'students'] });
+    const user = await this.usersRepository.findOne({
+      where: { id: userId },
+      relations: ['mentors', 'students'],
+    });
     if (!user) {
       throw new NotFoundException(`User with ID ${userId} not found`);
     }
 
     if (user.hasSwitchedRole) {
-      throw new BadRequestException('Role switch privilege has already been used');
+      throw new BadRequestException(
+        'Role switch privilege has already been used',
+      );
     }
 
-    const nextRole = user.role === UserRole.MENTOR ? UserRole.STUDENT : UserRole.MENTOR;
+    const nextRole =
+      user.role === UserRole.MENTOR ? UserRole.STUDENT : UserRole.MENTOR;
     user.role = nextRole;
     user.hasSwitchedRole = true;
 
@@ -108,14 +156,33 @@ export class UsersService {
     return this.usersRepository.save(user);
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
-    const user = await this.usersRepository.findOne({ where: { id }, relations: ['mentors', 'students'] });
+  async update(
+    id: string,
+    updateUserDto: UpdateUserDto,
+    currentUser?: User,
+  ): Promise<User> {
+    const user = await this.usersRepository.findOne({
+      where: { id },
+      relations: ['mentors', 'students'],
+    });
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
 
-    if (updateUserDto.role && updateUserDto.role !== user.role && user.hasSwitchedRole) {
-      throw new BadRequestException('Role switch privilege has already been used');
+    if (updateUserDto.role && updateUserDto.role !== user.role) {
+      if (currentUser && currentUser.role !== UserRole.ADMIN) {
+        throw new ForbiddenException(
+          'Only administrators can directly modify user roles',
+        );
+      }
+      if (
+        user.hasSwitchedRole &&
+        (!currentUser || currentUser.role !== UserRole.ADMIN)
+      ) {
+        throw new BadRequestException(
+          'Role switch privilege has already been used',
+        );
+      }
     }
 
     if (updateUserDto.role === UserRole.MENTOR && !user.mentorCode) {
@@ -125,7 +192,9 @@ export class UsersService {
     if (updateUserDto.password) {
       const salt = await bcrypt.genSalt();
       user.password = await bcrypt.hash(updateUserDto.password, salt);
-      delete (updateUserDto as any).password;
+      user.tokenVersion = (user.tokenVersion || 0) + 1;
+      user.hashedRefreshToken = null;
+      delete (updateUserDto as Record<string, unknown>).password;
     }
 
     Object.assign(user, updateUserDto);
@@ -160,13 +229,18 @@ export class UsersService {
   async createRequest(studentId: string, mentorCode: string) {
     const student = await this.usersRepository.findOneBy({ id: studentId });
     if (!student) throw new NotFoundException('Student not found');
-    if (student.role !== UserRole.STUDENT) throw new BadRequestException('Only students can send requests');
+    if (student.role !== UserRole.STUDENT)
+      throw new BadRequestException('Only students can send requests');
 
     const mentor = await this.usersRepository.findOneBy({ mentorCode });
     if (!mentor) throw new NotFoundException('Mentor code invalid');
 
     const existing = await this.requestRepository.findOne({
-      where: { student: { id: studentId }, mentor: { id: mentor.id }, status: RequestStatus.PENDING },
+      where: {
+        student: { id: studentId },
+        mentor: { id: mentor.id },
+        status: RequestStatus.PENDING,
+      },
     });
     if (existing) throw new ConflictException('Request already pending');
 
@@ -185,17 +259,24 @@ export class UsersService {
     });
   }
 
-  async respondToRequest(mentorId: string, requestId: string, status: 'approved' | 'rejected') {
+  async respondToRequest(
+    mentorId: string,
+    requestId: string,
+    status: 'approved' | 'rejected',
+  ) {
     const request = await this.requestRepository.findOne({
       where: { id: requestId },
       relations: ['student', 'mentor'],
     });
 
     if (!request) throw new NotFoundException('Request not found');
-    if (request.mentor.id !== mentorId) throw new UnauthorizedException('Not your request');
-    if (request.status !== RequestStatus.PENDING) throw new BadRequestException('Request already responded');
+    if (request.mentor.id !== mentorId)
+      throw new UnauthorizedException('Not your request');
+    if (request.status !== RequestStatus.PENDING)
+      throw new BadRequestException('Request already responded');
 
-    request.status = status === 'approved' ? RequestStatus.APPROVED : RequestStatus.REJECTED;
+    request.status =
+      status === 'approved' ? RequestStatus.APPROVED : RequestStatus.REJECTED;
     await this.requestRepository.save(request);
 
     if (status === 'approved') {
@@ -216,15 +297,19 @@ export class UsersService {
   async refreshMentorCode(userId: string): Promise<User> {
     const user = await this.usersRepository.findOneBy({ id: userId });
     if (!user) throw new NotFoundException('User not found');
-    if (user.role !== UserRole.MENTOR) throw new BadRequestException('Only mentors can have a code');
+    if (user.role !== UserRole.MENTOR)
+      throw new BadRequestException('Only mentors can have a code');
 
     if (user.lastMentorCodeUpdate) {
       const now = new Date();
       const lastUpdate = new Date(user.lastMentorCodeUpdate);
-      const hoursDiff = (now.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60);
+      const hoursDiff =
+        (now.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60);
 
       if (hoursDiff < 12) {
-        throw new BadRequestException(`You can only refresh your code once every 12 hours. Try again in ${Math.ceil(12 - hoursDiff)} hours.`);
+        throw new BadRequestException(
+          `You can only refresh your code once every 12 hours. Try again in ${Math.ceil(12 - hoursDiff)} hours.`,
+        );
       }
     }
 
@@ -242,11 +327,15 @@ export class UsersService {
 
     if (!mentor) throw new NotFoundException('Mentor not found');
 
-    mentor.students = mentor.students.filter(s => s.id !== studentId);
+    mentor.students = mentor.students.filter((s) => s.id !== studentId);
     await this.usersRepository.save(mentor);
 
     const requests = await this.requestRepository.find({
-      where: { mentor: { id: mentorId }, student: { id: studentId }, status: RequestStatus.APPROVED },
+      where: {
+        mentor: { id: mentorId },
+        student: { id: studentId },
+        status: RequestStatus.APPROVED,
+      },
     });
 
     for (const req of requests) {

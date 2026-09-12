@@ -7,7 +7,9 @@ export class CreateGroupDto {
   @IsString()
   name: string;
 
-  @ApiPropertyOptional({ example: 'Daily study tracking and peer accountability' })
+  @ApiPropertyOptional({
+    example: 'Daily study tracking and peer accountability',
+  })
   @IsOptional()
   @IsString()
   description?: string;

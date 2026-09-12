@@ -5,7 +5,10 @@ import { EducationSystem } from './education-system.entity';
 
 @Entity('country')
 export class Country extends BaseEntity {
-  @ApiProperty({ example: 'TR', description: 'ISO 3166-1 alpha-2 country code' })
+  @ApiProperty({
+    example: 'TR',
+    description: 'ISO 3166-1 alpha-2 country code',
+  })
   @Column({ unique: true, length: 2 })
   code: string;
 

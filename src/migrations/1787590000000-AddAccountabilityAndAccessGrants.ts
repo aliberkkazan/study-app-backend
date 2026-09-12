@@ -117,8 +117,12 @@ export class AddAccountabilityAndAccessGrants1787590000000 implements MigrationI
     await queryRunner.query(
       `ALTER TABLE "study_session" DROP CONSTRAINT IF EXISTS "FK_study_session_verified_by"`,
     );
-    await queryRunner.query(`ALTER TABLE "study_session" DROP COLUMN IF EXISTS "mentor_feedback"`);
-    await queryRunner.query(`ALTER TABLE "study_session" DROP COLUMN IF EXISTS "verified_by"`);
+    await queryRunner.query(
+      `ALTER TABLE "study_session" DROP COLUMN IF EXISTS "mentor_feedback"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "study_session" DROP COLUMN IF EXISTS "verified_by"`,
+    );
     await queryRunner.query(
       `ALTER TABLE "study_session" DROP COLUMN IF EXISTS "verification_status"`,
     );
@@ -126,10 +130,20 @@ export class AddAccountabilityAndAccessGrants1787590000000 implements MigrationI
     await queryRunner.query(`DROP TABLE IF EXISTS "accountability_group"`);
     await queryRunner.query(`DROP TABLE IF EXISTS "share_token"`);
     await queryRunner.query(`DROP TABLE IF EXISTS "access_grant"`);
-    await queryRunner.query(`DROP TYPE IF EXISTS "public"."session_verification_status_enum"`);
-    await queryRunner.query(`DROP TYPE IF EXISTS "public"."group_member_role_enum"`);
-    await queryRunner.query(`DROP TYPE IF EXISTS "public"."share_token_timeframe_enum"`);
-    await queryRunner.query(`DROP TYPE IF EXISTS "public"."access_grant_status_enum"`);
-    await queryRunner.query(`DROP TYPE IF EXISTS "public"."access_grant_scope_enum"`);
+    await queryRunner.query(
+      `DROP TYPE IF EXISTS "public"."session_verification_status_enum"`,
+    );
+    await queryRunner.query(
+      `DROP TYPE IF EXISTS "public"."group_member_role_enum"`,
+    );
+    await queryRunner.query(
+      `DROP TYPE IF EXISTS "public"."share_token_timeframe_enum"`,
+    );
+    await queryRunner.query(
+      `DROP TYPE IF EXISTS "public"."access_grant_status_enum"`,
+    );
+    await queryRunner.query(
+      `DROP TYPE IF EXISTS "public"."access_grant_scope_enum"`,
+    );
   }
 }

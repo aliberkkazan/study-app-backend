@@ -13,7 +13,9 @@ export enum GroupRole {
 @Unique(['groupId', 'userId'])
 export class GroupMember extends BaseEntity {
   @ApiProperty({ type: () => AccountabilityGroup })
-  @ManyToOne(() => AccountabilityGroup, (group) => group.members, { onDelete: 'CASCADE' })
+  @ManyToOne(() => AccountabilityGroup, (group) => group.members, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'group_id' })
   group: AccountabilityGroup;
 
@@ -37,6 +39,10 @@ export class GroupMember extends BaseEntity {
   role: GroupRole;
 
   @ApiProperty()
-  @Column({ name: 'joined_at', type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
+  @Column({
+    name: 'joined_at',
+    type: 'timestamptz',
+    default: () => 'CURRENT_TIMESTAMP',
+  })
   joinedAt: Date;
 }

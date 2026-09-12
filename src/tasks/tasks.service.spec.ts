@@ -2,6 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { TasksService } from './tasks.service';
 import { Task } from './entities/task.entity';
+import { AccessGrant } from '../accountability/entities/access-grant.entity';
+import { UsersService } from '../users/users.service';
 
 describe('TasksService', () => {
   let service: TasksService;
@@ -26,6 +28,19 @@ describe('TasksService', () => {
               orderBy: jest.fn().mockReturnThis(),
               getMany: jest.fn().mockResolvedValue([]),
             })),
+          },
+        },
+        {
+          provide: getRepositoryToken(AccessGrant),
+          useValue: {
+            findOne: jest.fn(),
+            find: jest.fn(),
+          },
+        },
+        {
+          provide: UsersService,
+          useValue: {
+            findOne: jest.fn(),
           },
         },
       ],

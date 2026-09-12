@@ -7,7 +7,11 @@ export class StartSessionDto {
   @IsUUID()
   taskId?: string;
 
-  @ApiProperty({ example: 45, description: 'Target duration in minutes', required: false })
+  @ApiProperty({
+    example: 45,
+    description: 'Target duration in minutes',
+    required: false,
+  })
   @IsOptional()
   @IsNumber()
   targetDuration?: number;
