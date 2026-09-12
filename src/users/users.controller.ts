@@ -162,4 +162,12 @@ export class UsersController {
   ) {
     return this.usersService.removeStudent(user.id, studentId);
   }
+
+  @Delete('mentors/:mentorId')
+  async removeMentor(
+    @CurrentUser() user: User,
+    @Param('mentorId') mentorId: string,
+  ) {
+    return this.usersService.removeMentor(user.id, mentorId);
+  }
 }

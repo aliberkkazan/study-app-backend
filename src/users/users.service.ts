@@ -343,4 +343,8 @@ export class UsersService {
       await this.requestRepository.save(req);
     }
   }
+
+  async removeMentor(studentId: string, mentorId: string): Promise<void> {
+    await this.removeStudent(mentorId, studentId);
+  }
 }
