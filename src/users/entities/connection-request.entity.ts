@@ -17,7 +17,9 @@ export class ConnectionRequest extends BaseEntity {
   student: User;
 
   @ApiProperty({ type: () => User })
-  @ManyToOne(() => User, (user) => user.receivedRequests, { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, (user) => user.receivedRequests, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'mentor_id' })
   mentor: User;
 

@@ -2,12 +2,18 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
-import { ProgramsModule } from './programs/programs.module';
-import { SubmissionsModule } from './submissions/submissions.module';
+import { TasksModule } from './tasks/tasks.module';
+import { EvidenceModule } from './evidence/evidence.module';
+import { StudySessionsModule } from './study-sessions/study-sessions.module';
+import { ExamPacksModule } from './exam-packs/exam-packs.module';
+import { StudyProfileModule } from './study-profile/study-profile.module';
+import { RoadmapModule } from './roadmap/roadmap.module';
+import { AccountabilityModule } from './accountability/accountability.module';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 
 @Module({
@@ -15,6 +21,12 @@ import { JwtAuthGuard } from './auth/jwt-auth.guard';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 60,
+      },
+    ]),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
@@ -25,18 +37,28 @@ import { JwtAuthGuard } from './auth/jwt-auth.guard';
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_NAME'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: false, // Auto-create tables (dev only)
+        synchronize: false,
+        logging: configService.get<string>('NODE_ENV') === 'development',
       }),
       inject: [ConfigService],
     }),
     UsersModule,
     AuthModule,
-    ProgramsModule,
-    SubmissionsModule,
+    TasksModule,
+    StudySessionsModule,
+    EvidenceModule,
+    ExamPacksModule,
+    StudyProfileModule,
+    RoadmapModule,
+    AccountabilityModule,
   ],
   controllers: [AppController],
   providers: [
     AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,

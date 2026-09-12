@@ -1,0 +1,155 @@
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+import {
+  IsBoolean,
+  IsEmail,
+  IsEnum,
+  IsInt,
+  IsISO8601,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Max,
+  Min,
+  ValidateNested,
+} from 'class-validator';
+import { AccessScope } from '../entities/access-grant.entity';
+import { ReportTimeframe } from '../entities/share-token.entity';
+import { SessionVerificationStatus } from '../../study-sessions/entities/study-session.entity';
+
+export class GrantPermissionsDto {
+  @ApiPropertyOptional({ example: true })
+  @IsOptional()
+  @IsBoolean()
+  canAssignTasks?: boolean;
+
+  @ApiPropertyOptional({ example: true })
+  @IsOptional()
+  @IsBoolean()
+  canViewResults?: boolean;
+
+  @ApiPropertyOptional({ example: true })
+  @IsOptional()
+  @IsBoolean()
+  canVerifySessions?: boolean;
+
+  @ApiPropertyOptional({ example: true })
+  @IsOptional()
+  @IsBoolean()
+  canGiveFeedback?: boolean;
+}
+
+export class CreateInviteDto {
+  @ApiPropertyOptional({ enum: AccessScope, default: AccessScope.PARTNER })
+  @IsOptional()
+  @IsEnum(AccessScope)
+  scope?: AccessScope;
+
+  @ApiPropertyOptional({ example: 'mentor@example.com' })
+  @IsOptional()
+  @IsEmail()
+  inviteEmail?: string;
+
+  @ApiPropertyOptional({ type: () => GrantPermissionsDto })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => GrantPermissionsDto)
+  permissions?: GrantPermissionsDto;
+
+  @ApiPropertyOptional({ example: '2027-12-31T23:59:59.000Z' })
+  @IsOptional()
+  @IsISO8601()
+  expiresAt?: string;
+}
+
+export class AcceptInviteDto {
+  @ApiPropertyOptional({
+    example: 'AG-98F12A1184E34720',
+    description: 'Invite code provided by the student',
+  })
+  @IsOptional()
+  @IsString()
+  inviteCode?: string;
+
+  @ApiPropertyOptional({ description: 'Grant ID to accept directly' })
+  @IsOptional()
+  @IsString()
+  grantId?: string;
+}
+
+export class CreateShareTokenDto {
+  @ApiProperty({ enum: ReportTimeframe, default: ReportTimeframe.LAST_7_DAYS })
+  @IsEnum(ReportTimeframe)
+  timeframe: ReportTimeframe;
+
+  @ApiPropertyOptional({
+    example: 7,
+    minimum: 1,
+    maximum: 90,
+    description: 'Token expiration duration in days (min 1, max 90, default 7)',
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(90)
+  durationDays?: number;
+}
+
+export class VerifySessionDto {
+  @ApiProperty({
+    enum: SessionVerificationStatus,
+    default: SessionVerificationStatus.VERIFIED,
+  })
+  @IsEnum(SessionVerificationStatus)
+  status: SessionVerificationStatus;
+
+  @ApiPropertyOptional({
+    example: 'Great job staying focused and answering all question bank items.',
+  })
+  @IsOptional()
+  @IsString()
+  feedback?: string;
+}
+
+export class AssignStudentTaskDto {
+  @ApiProperty({ description: 'Student User ID' })
+  @IsUUID()
+  studentId: string;
+
+  @ApiProperty({ example: 'Complete 30 SAT Geometry Questions' })
+  @IsString()
+  title: string;
+
+  @ApiPropertyOptional({
+    example: 'Focus on Circle equations and Trigonometry ratios.',
+  })
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @ApiPropertyOptional({ example: 'Math' })
+  @IsOptional()
+  @IsString()
+  subject?: string;
+
+  @ApiPropertyOptional({ example: 'Circles' })
+  @IsOptional()
+  @IsString()
+  topic?: string;
+
+  @ApiPropertyOptional({ example: 'Solve with >= 85% accuracy' })
+  @IsOptional()
+  @IsString()
+  targetOutcome?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsISO8601()
+  dueDate?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsISO8601()
+  scheduledDate?: string;
+}

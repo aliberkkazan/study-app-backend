@@ -13,7 +13,7 @@ export class BaseFilterDto extends IntersectionType(
   PaginationDto,
   IntersectionType(SortingDto, DateFilterDto),
 ) {
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     description: 'JSON object for filtering fields (e.g. {"studentId": 1})',
     type: 'object',
     example: { studentId: 1, active: true },
