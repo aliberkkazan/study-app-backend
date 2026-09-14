@@ -5,6 +5,11 @@ import { EvidenceStatus } from '../entities/evidence.entity';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class UpdateEvidenceDto extends PartialType(CreateEvidenceDto) {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  id?: string;
+
   @ApiPropertyOptional({ enum: EvidenceStatus })
   @IsOptional()
   @IsEnum(EvidenceStatus)

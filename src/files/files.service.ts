@@ -13,18 +13,25 @@ export class FilesService {
   private privateBucket: string;
 
   constructor(private configService: ConfigService) {
-    const supabaseUrl = this.configService.get<string>('SUPABASE_URL');
-    const supabaseKey =
+    const rawSupabaseUrl = this.configService.get<string>('SUPABASE_URL');
+    const supabaseUrl = rawSupabaseUrl?.trim().replace(/^["']|["']$/g, '');
+
+    const rawSupabaseKey =
       this.configService.get<string>('SUPABASE_SERVICE_ROLE_KEY') ||
       this.configService.get<string>('SUPABASE_ANON_KEY');
+    const supabaseKey = rawSupabaseKey?.trim().replace(/^["']|["']$/g, '');
 
-    this.privateBucket =
+    const rawBucket =
       this.configService.get<string>('SUPABASE_BUCKET') ||
       this.configService.get<string>('SUPABASE_PRIVATE_BUCKET') ||
       'studyapp-assets';
+    this.privateBucket = rawBucket.trim().replace(/^["']|["']$/g, '');
 
     if (supabaseUrl && supabaseKey) {
       this.supabase = createClient(supabaseUrl, supabaseKey);
+      this.logger.log(
+        `FilesService initialized for Supabase URL: ${supabaseUrl}, Bucket: ${this.privateBucket}`,
+      );
     } else {
       this.logger.warn(
         'Supabase credentials not configured. FilesService running in mock/offline mode.',
@@ -58,7 +65,13 @@ export class FilesService {
       });
 
     if (error) {
-      this.logger.error(`Upload error: ${error.message}`);
+      const cause =
+        (error as any)?.originalError?.cause?.message ||
+        (error as any)?.cause?.message ||
+        (error as any)?.message;
+      this.logger.error(
+        `Upload error: ${error.message} (Bucket: ${this.privateBucket}, Detail: ${cause})`,
+      );
       throw new BadRequestException(`Upload failed: ${error.message}`);
     }
 
@@ -116,7 +129,13 @@ export class FilesService {
       });
 
     if (error) {
-      this.logger.error(`Base64 upload error: ${error.message}`);
+      const cause =
+        (error as any)?.originalError?.cause?.message ||
+        (error as any)?.cause?.message ||
+        (error as any)?.message;
+      this.logger.error(
+        `Base64 upload error: ${error.message} (Bucket: ${this.privateBucket}, Detail: ${cause})`,
+      );
       throw new BadRequestException(`Upload failed: ${error.message}`);
     }
 
